@@ -1,304 +1,87 @@
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap');
 
-:root {
-    --bg-dark: #1a202c;
-    --bg-medium: #2d3748;
-    --bg-light: #4a5568;
-    --neon-blue: #00bcd4; /* For main highlights */
-    --neon-purple: #8e24aa; /* For secondary accents */
-    --text-light: #e2e8f0;
-    --text-medium: #cbd5e0;
-    --shadow-light: rgba(0, 188, 212, 0.7);
-    --shadow-purple: rgba(142, 36, 170, 0.7);
+:root{
+  --bg-dark:#0b1220; --bg-medium:#141b2d; --bg-light:#1e2942;
+  --neon-blue:#00bcd4; --neon-purple:#8e24aa;
+  --text-light:#e2e8f0; --text-medium:#cbd5e0;
+  --shadow-light:rgba(0,188,212,.7); --shadow-purple:rgba(142,36,170,.7);
 }
 
-/* Base and Layout Lock */
-html, body {
-    height: 100%; 
-    margin: 0;
-    padding: 0;
-    overflow: hidden; /* ป้องกันการ Scroll หลัก */
+html,body{height:100%;margin:0;padding:0;overflow:hidden}
+body{
+  font-family:'Kanit',sans-serif;
+  background:radial-gradient(1200px 600px at 10% -10%, #123 0%, #0b1220 60%, #070b15 100%);
+  color:var(--text-light);display:flex;flex-direction:column;min-height:100vh;
 }
+.header{background:#141b2d;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:2px solid var(--neon-blue);box-shadow:0 0 15px var(--shadow-light);position:sticky;top:0;z-index:1000}
+.neon-text{font-size:2.2rem;color:var(--text-light);text-shadow:0 0 6px var(--neon-blue),0 0 18px var(--neon-blue);margin:0}
+.wallet-btn,.neon-glow-btn{background:var(--neon-blue);color:#001018;border:none;padding:.75rem 1.2rem;border-radius:10px;font-weight:700;cursor:pointer;
+  transition:.2s;box-shadow:0 0 10px var(--shadow-light);text-transform:uppercase}
+.wallet-btn:hover,.neon-glow-btn:hover{background:var(--neon-purple);color:var(--text-light);box-shadow:0 0 16px var(--shadow-purple);transform:translateY(-2px)}
 
-body {
-    font-family: 'Kanit', sans-serif;
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+.main-container{display:grid;grid-template-columns:1fr 2.4fr 1fr;gap:1.2rem;padding:1.4rem;flex-grow:1;overflow-y:auto;align-items:start}
+.neon-box{background:linear-gradient(180deg,rgba(30,41,66,.7),rgba(20,27,45,.7));backdrop-filter:blur(6px);
+  border:2px solid var(--neon-purple);border-radius:14px;padding:1.2rem;box-shadow:0 0 20px var(--shadow-purple)}
+.neon-box h2{color:var(--neon-blue);text-shadow:0 0 8px var(--shadow-light);margin:0 0 1rem;border-bottom:1px dashed var(--neon-blue);padding-bottom:.5rem}
+
+/* River area */
+.river-3d-area{background:var(--bg-medium);border:2px solid var(--neon-blue);border-radius:14px;padding:1rem 1.2rem;box-shadow:0 0 20px var(--shadow-light);
+  display:flex;flex-direction:column;align-items:center}
+.river-3d-area h2{color:#caa9ff;text-shadow:0 0 8px var(--shadow-purple);margin:0 0 1rem;border-bottom:1px dashed var(--neon-purple);padding-bottom:.5rem}
+#river-simulation{width:100%;height:460px;background:#000;border-radius:10px;overflow:hidden;box-shadow:inset 0 0 15px var(--shadow-light);
+  display:flex;justify-content:center;align-items:center}
+
+/* Krathong list */
+.krathong-options{display:flex;flex-direction:column;gap:.9rem;max-height:520px;overflow-y:auto;padding-right:6px}
+.krathong-card{background:linear-gradient(180deg,#1e2942,#182139);border-radius:12px;padding:.9rem;display:flex;align-items:center;gap:.9rem;
+  box-shadow:0 0 8px rgba(0,0,0,.35);transition:.15s;border-left:3px solid var(--neon-blue)}
+.krathong-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,188,212,.35)}
+.krathong-img{width:76px;height:76px;border-radius:12px;object-fit:cover;border:3px solid var(--neon-blue)}
+.krathong-info{flex-grow:1}
+.krathong-info h3{margin:0 0 .2rem 0;color:var(--neon-blue)}
+.krathong-info p{margin:0;font-size:.93rem;color:var(--text-medium)}
+.krathong-card .buy-btn{background-color:#4CAF50;box-shadow:0 0 10px rgba(76,175,80,.5)}
+.krathong-card .buy-btn:hover{background-color:#66bb6a;box-shadow:0 0 15px rgba(76,175,80,.7)}
+
+/* Donation box — compact */
+.donation-card{
+  margin-top:1rem;background:rgba(0,188,212,.06);border:1px solid rgba(0,188,212,.35);
+  border-radius:12px;padding:.9rem;box-shadow:0 0 10px rgba(0,188,212,.15)
 }
+.donation-card__title{font-weight:700;margin-bottom:.6rem}
+.donation-card__controls{display:flex;gap:.6rem}
+.donation-input{flex:1;min-width:0;background:#0e1627;border:1px solid rgba(0,188,212,.35);border-radius:10px;color:var(--text-light);
+  padding:.65rem .8rem;font-size:.95rem;outline:none}
+.donation-input:focus{box-shadow:0 0 10px rgba(0,188,212,.35)}
+.donation-btn{white-space:nowrap;padding:.65rem 1rem}
+.donation-note{opacity:.8}
 
-.header {
-    background-color: var(--bg-medium);
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid var(--neon-blue);
-    box-shadow: 0 0 15px var(--shadow-light);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+/* Ranking */
+#ranking-list{max-height:460px;overflow-y:auto;padding-right:6px}
+#ranking-list .rank-item{background:var(--bg-light);padding:.8rem;margin-bottom:.7rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;
+  font-size:.95rem;border-left:3px solid var(--neon-blue);transition:transform .15s}
+#ranking-list .rank-item:hover{transform:translateX(5px);box-shadow:0 0 10px rgba(0,188,212,.3)}
+
+.footer{background:var(--bg-medium);text-align:center;padding:.9rem;margin-top:auto;border-top:2px solid var(--neon-purple);
+  box-shadow:0 0 15px var(--shadow-purple);font-size:.9rem;color:var(--text-medium)}
+
+/* Responsive */
+@media (max-width:1200px){.main-container{grid-template-columns:1.1fr 2fr 1fr}}
+@media (max-width:992px){
+  .main-container{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  .krathong-selection{grid-column:1;grid-row:1}
+  .river-3d-area{grid-column:1;grid-row:2}
+  .ranking-dashboard{grid-column:1;grid-row:3}
+  #river-simulation{height:380px}
+  .donation-card__controls{flex-direction:row}
 }
-
-.neon-text {
-    font-size: 2.5rem;
-    color: var(--text-light);
-    text-shadow: 
-        0 0 5px var(--neon-blue),
-        0 0 10px var(--neon-blue),
-        0 0 20px var(--neon-blue),
-        0 0 40px var(--shadow-light);
-    margin: 0;
-}
-
-.wallet-btn, .neon-glow-btn {
-    background-color: var(--neon-blue);
-    color: var(--bg-dark);
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0 0 10px var(--shadow-light);
-    text-transform: uppercase;
-}
-
-.wallet-btn:hover, .neon-glow-btn:hover {
-    background-color: var(--neon-purple);
-    color: var(--text-light);
-    box-shadow: 0 0 15px var(--shadow-purple);
-    transform: translateY(-2px);
-}
-
-/* Grid Layout for Main Content */
-.main-container {
-    display: grid; 
-    grid-template-columns: 1fr 2fr 1fr; /* 3 คอลัมน์: ซ้าย, กลาง (2 เท่า), ขวา */
-    gap: 2rem;
-    padding: 2rem;
-    flex-grow: 1; 
-    overflow-y: auto; /* อนุญาตให้ main-container scroll ได้ถ้าเนื้อหาเกิน */
-    align-items: start; 
-}
-
-.neon-box {
-    background-color: var(--bg-medium);
-    border: 2px solid var(--neon-purple);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 0 20px var(--shadow-purple);
-}
-
-.neon-box h2 {
-    color: var(--neon-blue);
-    text-shadow: 0 0 8px var(--shadow-light);
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px dashed var(--neon-blue);
-    padding-bottom: 0.5rem;
-}
-
-/* Ranking Dashboard */
-.ranking-dashboard {
-    /* grid-column: 1; */
-}
-
-#ranking-list {
-    max-height: 400px; 
-    overflow-y: auto; 
-    padding-right: 10px; 
-}
-
-#ranking-list .rank-item {
-    background-color: var(--bg-light);
-    padding: 0.8rem;
-    margin-bottom: 0.7rem;
-    border-radius: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.95rem;
-    border-left: 3px solid var(--neon-blue);
-    transition: transform 0.2s ease;
-}
-
-#ranking-list .rank-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 0 10px rgba(0, 188, 212, 0.3);
-}
-
-/* River 3D Area */
-.river-3d-area {
-    background-color: var(--bg-medium);
-    border: 2px solid var(--neon-blue);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 0 20px var(--shadow-light);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.river-3d-area h2 {
-    color: var(--neon-purple);
-    text-shadow: 0 0 8px var(--shadow-purple);
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px dashed var(--neon-purple);
-    padding-bottom: 0.5rem;
-}
-
-#river-simulation {
-    width: 100%;
-    height: 400px; 
-    background-color: #000; 
-    border-radius: 8px;
-    overflow: hidden; 
-    box-shadow: inset 0 0 15px var(--shadow-light);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Krathong Selection */
-.krathong-selection {
-    /* grid-column: 3; */
-}
-
-.krathong-options {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    max-height: 500px; 
-    overflow-y: auto; 
-    padding-right: 10px; 
-}
-
-.krathong-card {
-    background-color: var(--bg-light);
-    border-radius: 10px;
-    padding: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.krathong-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 188, 212, 0.4);
-}
-
-.krathong-img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--neon-blue);
-}
-
-.krathong-info {
-    flex-grow: 1;
-}
-
-.krathong-info h3 {
-    margin: 0 0 0.25rem 0;
-    color: var(--neon-blue);
-}
-
-.krathong-info p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--text-medium);
-}
-
-.krathong-card .buy-btn {
-    background-color: #4CAF50; 
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-}
-
-.krathong-card .buy-btn:hover {
-    background-color: #66bb6a;
-    box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
-}
-
-/* Footer */
-.footer {
-    background-color: var(--bg-medium);
-    text-align: center;
-    padding: 1rem;
-    margin-top: auto; 
-    border-top: 2px solid var(--neon-purple);
-    box-shadow: 0 0 15px var(--shadow-purple);
-    font-size: 0.9rem;
-    color: var(--text-medium);
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    .main-container {
-        grid-template-columns: 1.5fr 2fr; 
-        grid-template-rows: auto auto; 
-    }
-    .ranking-dashboard {
-        grid-column: 1 / 2; 
-        grid-row: 1 / 2; 
-    }
-    .river-3d-area {
-        grid-column: 2 / 3; 
-        grid-row: 1 / 2; 
-    }
-    .krathong-selection {
-        grid-column: 1 / 3; 
-        grid-row: 2 / 3; 
-    }
-}
-
-@media (max-width: 992px) {
-    .main-container {
-        grid-template-columns: 1fr; 
-        grid-template-rows: auto auto auto; 
-    }
-    .ranking-dashboard {
-        grid-column: 1;
-        grid-row: 1;
-    }
-    .river-3d-area {
-        grid-column: 1;
-        grid-row: 2;
-    }
-    .krathong-selection {
-        grid-column: 1;
-        grid-row: 3;
-    }
-}
-
-@media (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem;
-    }
-    .neon-text {
-        font-size: 2rem;
-    }
-    .wallet-btn, .neon-glow-btn {
-        width: 100%;
-        text-align: center;
-    }
-    .main-container {
-        padding: 1rem;
-        gap: 1rem;
-    }
-    .neon-box, .river-3d-area {
-        padding: 1rem;
-    }
-    #river-simulation {
-        height: 300px; 
-    }
+@media (max-width:768px){
+  .header{flex-direction:column;gap:1rem;padding:1rem}
+  .neon-text{font-size:1.9rem}
+  .wallet-btn,.neon-glow-btn{width:100%;text-align:center}
+  .main-container{padding:1rem;gap:1rem}
+  #river-simulation{height:320px}
+  .donation-card__controls{flex-direction:column}
+  .donation-btn{width:100%}
 }

@@ -1,106 +1,115 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Full Moon | ลอยกระทง Web3.0 (Clean Base)</title>
-    <link rel="stylesheet" href="style.css"> 
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Full Moon | ลอยกระทง Web3.0</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <header class="header">
+    <h1 class="neon-text">🌕 Full Moon</h1>
+    <button id="connect-wallet-btn" class="wallet-btn neon-glow-btn">🔗 เชื่อมต่อ Wallet</button>
+  </header>
 
-    <header class="header">
-        <h1 class="neon-text">🌕 Full Moon</h1>
-        <button id="connect-wallet-btn" class="wallet-btn neon-glow-btn">🔗 เชื่อมต่อ Wallet</button>
-    </header>
+  <main class="main-container">
+    <!-- ซ้าย: เลือกกระทง -->
+    <aside class="krathong-selection neon-box">
+      <h2>🕯️ เลือกกระทงลอยบูชา (FM Token)</h2>
 
-    <main class="main-container">
-        
-        <aside class="ranking-dashboard neon-box">
-            <h2>🏆 Ranking ผู้มีศรัทธาสูงสุด</h2>
-            <div id="ranking-list">
-                <p class="rank-item">1. ✨ 0xAbc...xyz (1000 FM)</p>
-                <p class="rank-item">2. 💫 0xDef...uvw (500 FM)</p>
-                <p class="rank-item">3. 🌟 0xGhi...rst (250 FM)</p>
-                <p class="rank-item">4. 🕯️ ...</p>
-            </div>
-        </aside>
+      <div class="krathong-options">
+        <div class="krathong-card" data-level="1" data-price="1">
+          <img src="./1.jfif" alt="Tier 1 - Coconut Krathong" class="krathong-img">
+          <div class="krathong-info">
+            <h3>🥥 กระทงกะลา (Tier 1)</h3>
+            <p>ราคา: <b>1 FM</b></p>
+          </div>
+          <button class="buy-btn neon-glow-btn">ลอย 1 FM</button>
+        </div>
 
-        <section class="river-3d-area">
-            <h2>🌊 แม่น้ำจำลอง 3D </h2>
-            <div id="river-simulation">
-                <p>... 🌌 พื้นที่สำหรับ 3D Simulation (Three.js/Babylon.js) ...</p>
-            </div>
-            <div class="krathong-counter">
-                <p>จำนวนกระทงที่ลอยแล้ว: **1,234 ดวง**</p>
-            </div>
-        </section>
+        <div class="krathong-card" data-level="2" data-price="3">
+          <img src="./2.jfif" alt="Tier 2 - Pink Lotus" class="krathong-img">
+          <div class="krathong-info">
+            <h3>🌿 กระทงใบตอง (Tier 2)</h3>
+            <p>ราคา: <b>3 FM</b></p>
+          </div>
+          <button class="buy-btn neon-glow-btn">ลอย 3 FM</button>
+        </div>
 
-        <aside class="krathong-selection neon-box">
-            <h2>🕯️ เลือกกระทงลอยบูชา (FM Token)</h2>
-            <div class="krathong-options">
-                
-                <div class="krathong-card" data-level="1" data-price="1">
-                    <img src="https://placehold.co/100x100/388e3c/ffffff?text=Tier+1" alt="กระทงกะลา" class="krathong-img">
-                    <div class="krathong-info">
-                        <h3>🥥 กระทงกะลา (Tier 1)</h3>
-                        <p>ราคา: **1 FM**</p>
-                    </div>
-                    <button class="buy-btn neon-glow-btn">ลอย 1 FM</button>
-                </div>
-                
-                <div class="krathong-card" data-level="2" data-price="3">
-                    <img src="https://placehold.co/100x100/4CAF50/ffffff?text=Tier+2" alt="กระทงใบตอง" class="krathong-img">
-                    <div class="krathong-info">
-                        <h3>🌿 กระทงใบตอง (Tier 2)</h3>
-                        <p>ราคา: **3 FM**</p>
-                    </div>
-                    <button class="buy-btn neon-glow-btn">ลอย 3 FM</button>
-                </div>
+        <div class="krathong-card" data-level="3" data-price="5">
+          <img src="./3.jfif" alt="Tier 3 - Orange Lotus" class="krathong-img">
+          <div class="krathong-info">
+            <h3>🍞 กระทงขนมปัง (Tier 3)</h3>
+            <p>ราคา: <b>5 FM</b></p>
+          </div>
+          <button class="buy-btn neon-glow-btn">ลอย 5 FM</button>
+        </div>
 
-                <div class="krathong-card" data-level="3" data-price="5">
-                    <img src="https://placehold.co/100x100/FFC107/333333?text=Tier+3" alt="กระทงขนomปัง" class="krathong-img">
-                    <div class="krathong-info">
-                        <h3>🍞 กระทงขนมปัง (Tier 3)</h3>
-                        <p>ราคา: **5 FM**</p>
-                    </div>
-                    <button class="buy-btn neon-glow-btn">ลอย 5 FM</button>
-                </div>
+        <div class="krathong-card premium" data-level="4" data-price="10">
+          <img src="./4.jfif" alt="Tier 4 - Blue Ring Lotus" class="krathong-img">
+          <div class="krathong-info">
+            <h3>🌸 กระทงดอกบัว (Tier 4)</h3>
+            <p>ราคา: <b>10 FM</b></p>
+          </div>
+          <button class="buy-btn neon-glow-btn">ลอย 10 FM</button>
+        </div>
 
-                <div class="krathong-card premium" data-level="4" data-price="10">
-                    <img src="https://placehold.co/100x100/E91E63/ffffff?text=Tier+4" alt="กระทงดอกบัว" class="krathong-img">
-                    <div class="krathong-info">
-                        <h3>🌸 กระทงดอกบัว (Tier 4)</h3>
-                        <p>ราคา: **10 FM**</p>
-                    </div>
-                    <button class="buy-btn neon-glow-btn">ลอย 10 FM</button>
-                </div>
+        <div class="krathong-card ultra" data-level="5" data-price="100">
+          <img src="./5.jfif" alt="Tier 5 - Jewel Lotus" class="krathong-img">
+          <div class="krathong-info">
+            <h3>👑 กระทงเพชรพลอย (Tier 5)</h3>
+            <p>ราคา: <b>100 FM</b></p>
+          </div>
+          <button class="buy-btn neon-glow-btn">ลอย 100 FM</button>
+        </div>
+      </div>
 
-                <div class="krathong-card ultra" data-level="5" data-price="100">
-                    <img src="https://placehold.co/100x100/9C27B0/ffffff?text=Tier+5" alt="กระทงเพชรพลอย" class="krathong-img">
-                    <div class="krathong-info">
-                        <h3>👑 กระทงเพชรพลอย (Tier 5)</h3>
-                        <p>ราคา: **100 FM**</p>
-                    </div>
-                    <button class="buy-btn neon-glow-btn">ลอย 100 FM</button>
-                </div>
-                
-            </div>
+      <hr/>
 
-            <hr>
+      <!-- บริจาค: ปรับให้กะทัดรัดและเข้าชุด -->
+      <div class="donation-card">
+        <div class="donation-card__title">💖 บริจาคเพื่อการกุศล</div>
+        <div class="donation-card__controls">
+          <input type="number" id="donation-amount" placeholder="จำนวน FM" min="1" class="donation-input">
+          <button id="donate-btn" class="donation-btn neon-glow-btn">🤲 บริจาค</button>
+        </div>
+        <small class="donation-note">* เดโม่ธุรกรรม — ยังไม่หักเหรียญจริง</small>
+      </div>
+    </aside>
 
-            <div class="donation-section">
-                <h3>💖 บริจาคเพื่อการกุศล</h3>
-                <input type="number" id="donation-amount" placeholder="จำนวน FM ที่ต้องการบริจาค" min="1" required>
-                <button id="donate-btn" class="action-btn neon-glow-btn">🤲 บริจาค</button>
-            </div>
-        </aside>
+    <!-- กลาง: แม่น้ำ 3D -->
+    <section class="river-3d-area">
+      <h2>🌊 แม่น้ำจำลอง 3D</h2>
+      <div id="river-simulation">
+        <p>กำลังโหลด 3D ...</p>
+      </div>
+      <div class="krathong-counter">
+        <p>จำนวนกระทงที่ลอยแล้ว: <b id="float-count">1,234</b> ดวง</p>
+      </div>
+    </section>
 
-    </main>
+    <!-- ขวา: Ranking -->
+    <aside class="ranking-dashboard neon-box">
+      <h2>🏆 Ranking ผู้มีศรัทธาสูงสุด</h2>
+      <div id="ranking-list">
+        <p class="rank-item">1. ✨ 0xAbc...xyz (1000 FM)</p>
+        <p class="rank-item">2. 💫 0xDef...uvw (500 FM)</p>
+        <p class="rank-item">3. 🌟 0xGhi...rst (250 FM)</p>
+        <p class="rank-item">4. 🕯️ ...</p>
+      </div>
+    </aside>
+  </main>
 
-    <footer class="footer">
-        <p>Powered by Web3.0 &copy; 2025 Full Moon Project</p>
-    </footer>
+  <footer class="footer">
+    <p>Powered by Web3.0 &copy; 2025 Full Moon Project</p>
+  </footer>
 
-    <script src="app.js"></script> 
+  <!-- libs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- NEW: GLTFLoader (non-module, ใช้กับ THREE global) -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
+
+<script type="module" src="./app.js"></script>
+
 </body>
 </html>
