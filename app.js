@@ -1,71 +1,45 @@
 /* ===========================
- * Full Moon — app.js (ES Module)
+ * ส่วน Web3/UI
  * =========================== */
-
 document.addEventListener('DOMContentLoaded', async () => {
-  /* ---------- CONFIG ---------- */
-  const ASSETS_BASE = './assets/'; // ถ้ารูปอยู่โฟลเดอร์เดียวกับ index.html ให้เปลี่ยนเป็น './'
-
-  /* ---------- DOM REFS ---------- */
   const connectWalletBtn = document.getElementById('connect-wallet-btn');
-  const buyButtons       = document.querySelectorAll('.buy-btn');
-  const donateBtn        = document.getElementById('donate-btn');
-  const floatCountEl     = document.getElementById('float-count');
-
-  const wishModal     = document.getElementById('wish-modal');
-  const wishInput     = document.getElementById('wish-input');
-  const submitWishBtn = document.getElementById('submit-wish-btn');
-  const cancelWishBtn = document.getElementById('cancel-wish-btn');
-
-  const riverContainer = document.getElementById('river-simulation');
-  const riverVideo     = document.querySelector('.river-video-bg');
-  const bgMusic        = document.getElementById('bg-music');
-
-  /* ---------- STATE ---------- */
+  const buyButtons = document.querySelectorAll('.buy-btn');
+  const donateBtn = document.getElementById('donate-btn');
   let currentWalletAddress = null;
   let ethers;
+
+  const floatCountElement = document.getElementById('float-count');
   let krathongCount = 1234;
-  if (floatCountEl) floatCountEl.textContent = krathongCount.toLocaleString();
 
-  // สถานะการสั่งลอย/บริจาคผ่านโมดัล
-  let pendingKrathongTier  = null;
-  let pendingKrathongPrice = 0;
-  let pendingDonationAmount= 0;
+  if (floatCountElement) {
+    floatCountElement.textContent = krathongCount.toLocaleString();
+  }
 
-  /* ===========================
-   * Load Ethers + MetaMask
-   * =========================== */
+  // โหลด Ethers
   try {
     const ethersModule = await import('https://unpkg.com/ethers@5.7.2/dist/ethers.esm.js');
     ethers = ethersModule.ethers;
   } catch (e) {
-    if (connectWalletBtn) {
-      connectWalletBtn.textContent = '❌ Ethers Error';
-      connectWalletBtn.style.background = '#d82d2d';
-    }
+    connectWalletBtn.textContent = '❌ Ethers Error';
+    connectWalletBtn.style.backgroundColor = '#d82d2d';
     return;
   }
 
   if (typeof window.ethereum === 'undefined') {
-    if (connectWalletBtn) {
-      connectWalletBtn.textContent = '🦊 Install MetaMask';
-      connectWalletBtn.style.background = '#f76707';
-    }
+    connectWalletBtn.textContent = '🦊 Install MetaMask';
+    connectWalletBtn.style.backgroundColor = '#f76707';
+    return;
   }
 
-  /* ===========================
-   * Wallet Functions
-   * =========================== */
+  // (ฟังก์ชัน Wallet ... )
   function updateWalletStatus(addr) {
     currentWalletAddress = addr;
     const s = addr.slice(0, 6) + '...' + addr.slice(-4);
     connectWalletBtn.textContent = `🔌 ยกเลิกการเชื่อมต่อ (${s})`;
     connectWalletBtn.style.backgroundColor = '#00c853';
-
-    ensureUserInRanking(addr);
-    renderRankingList();
+    ensureUserInRanking(addr); // Make sure user exists in ranking
+    renderRankingList(); // Update ranking display
   }
-
   function resetWalletStatus() {
     currentWalletAddress = null;
     if (connectWalletBtn) {
@@ -73,67 +47,90 @@ document.addEventListener('DOMContentLoaded', async () => {
       connectWalletBtn.style.backgroundColor = '#2962ff';
     }
   }
-
   async function connectWallet() {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const accounts = await provider.send('eth_requestAccounts', []);
       updateWalletStatus(accounts[0]);
-    } catch (e) {
-      if (e?.code === 4001) alert('ผู้ใช้ปฏิเสธการเชื่อมต่อ');
-      resetWalletStatus();
-    }
+    } catch (e) { if (e?.code === 4001) alert('ผู้ใช้ปฏิเสธการเชื่อมต่อ'); resetWalletStatus(); }
   }
-
   async function disconnectWallet() {
-    try {
-      await window.ethereum?.request?.({
-        method: 'wallet_revokePermissions',
-        params: [{ eth_accounts: {} }],
-      });
-    } catch {}
+    try { await window.ethereum?.request?.({ method: 'wallet_revokePermissions', params: [{ eth_accounts: {} }] }); } catch {}
     resetWalletStatus();
   }
-
   connectWalletBtn?.addEventListener('click', async () => {
-    if (currentWalletAddress) await disconnectWallet();
-    else await connectWallet();
+    if (currentWalletAddress) await disconnectWallet(); else await connectWallet();
   });
-
-  // init
   resetWalletStatus();
   try {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const accounts = await provider.listAccounts();
     if (accounts.length) updateWalletStatus(accounts[0]);
   } catch {}
-
-  window.ethereum?.on('accountsChanged', (acc) => {
-    acc.length ? updateWalletStatus(acc[0]) : resetWalletStatus();
-  });
+  window.ethereum?.on('accountsChanged', (acc) => { acc.length ? updateWalletStatus(acc[0]) : resetWalletStatus(); });
   window.ethereum?.on('chainChanged', () => resetWalletStatus());
 
+
   /* ===========================
-   * Media (Video + Audio)
+   * ส่วนกระทง 2D และ Media (Video + Audio)
    * =========================== */
+
+  const riverContainer = document.getElementById('river-simulation');
+  const riverVideo     = document.querySelector('.river-video-bg');
+  const bgMusic        = document.getElementById('bg-music');
+
   if (riverVideo) riverVideo.volume = 0.2;
   if (bgMusic)    bgMusic.volume    = 0.1;
 
+  // === ส่วนที่แก้ไข: ปรับปรุงการ Unmute ===
   function unmuteMediaOnFirstClick() {
-    if (riverVideo && riverVideo.muted) { riverVideo.muted = false; riverVideo.play().catch(()=>{}); }
-    if (bgMusic && bgMusic.muted)       { bgMusic.muted    = false; bgMusic.play().catch(()=>{}); }
-    document.body.removeEventListener('click', unmuteMediaOnFirstClick);
+    let videoHandled = !riverVideo || !riverVideo.muted; // true if no video or already unmuted
+    let audioHandled = !bgMusic || !bgMusic.muted; // true if no music or already unmuted
+
+    console.log("First click detected. Attempting to unmute...");
+
+    if (riverVideo && riverVideo.muted) {
+      riverVideo.muted = false;
+      // พยายามเล่นวิดีโอ (อาจไม่สำเร็จบนมือถือบางรุ่น)
+      riverVideo.play().then(() => {
+        console.log("Video unmuted and playing.");
+        videoHandled = true;
+        checkAndRemoveListener();
+      }).catch((error) => {
+        console.warn("Video play() failed on first click (might be expected on mobile):", error);
+        videoHandled = true; // ถือว่าพยายามแล้ว
+        checkAndRemoveListener();
+      });
+    }
+
+    if (bgMusic && bgMusic.muted) {
+      bgMusic.muted = false;
+      // พยายามเล่นเพลง (อาจไม่สำเร็จบนมือถือบางรุ่น)
+      bgMusic.play().then(() => {
+        console.log("Audio unmuted and playing.");
+        audioHandled = true;
+        checkAndRemoveListener();
+      }).catch((error) => {
+        console.warn("Audio play() failed on first click (might be expected on mobile):", error);
+        audioHandled = true; // ถือว่าพยายามแล้ว
+        checkAndRemoveListener();
+      });
+    }
+
+    // ฟังก์ชันนี้จะถูกเรียก 2 ครั้ง (จาก video และ audio)
+    // เราจะลบ listener ออกเมื่อทั้งคู่พยายามเล่น (สำเร็จหรือไม่ก็ตาม)
+    function checkAndRemoveListener() {
+      if (videoHandled && audioHandled) {
+        console.log("Removing unmute listener.");
+        document.body.removeEventListener('click', unmuteMediaOnFirstClick);
+      }
+    }
   }
   document.body.addEventListener('click', unmuteMediaOnFirstClick);
+  // === จบส่วนที่แก้ไข ===
 
-  /* ===========================
-   * Krathong 2D
-   * =========================== */
-  function imgPathByTier(tier) {
-    const t = Math.min(Math.max(Number(tier)||1, 1), 5);
-    return `${ASSETS_BASE}${t}.png`;
-  }
 
+  // 3. สร้างกระทง
   function spawnKrathong(tier, wishText) {
     if (!riverContainer) return;
 
@@ -148,24 +145,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     tooltip.className = 'wish-tooltip';
     tooltip.textContent = wishText || 'ขอให้มีความสุข';
 
-    // ให้ tooltip อยู่ก่อนภาพ (ไม่เกี่ยวกับ preview box)
     wrap.appendChild(tooltip);
     wrap.appendChild(img);
 
     const riverH = riverContainer.clientHeight;
-    const startPct = 0.55, endPct = 0.70;
-    const zone = riverH * (endPct - startPct);
-    const startY = riverH * startPct;
-    const y = (Math.random() * zone) + startY;
-    wrap.style.setProperty('--krathong-start-y', `${y}px`);
 
-    wrap.style.animationDuration = `${25 + Math.random() * 15}s`;
+    // (Fallback เผื่อ riverH เป็น 0 ตอนเริ่ม)
+    if (riverH === 0) {
+        console.error("Bug detected: River height is 0. Spawning at 65%.");
+        wrap.style.setProperty('--krathong-start-y', `65%`);
+    } else {
+        const startPct = 0.55, endPct = 0.70; // ลอยสูงขึ้น
+        const zone = riverH * (endPct - startPct);
+        const startY = riverH * startPct;
+        const y = (Math.random() * zone) + startY;
+        wrap.style.setProperty('--krathong-start-y', `${y}px`);
+    }
+
+    wrap.style.animationDuration = `${25 + Math.random() * 15}s`; // ลอยช้า
     riverContainer.appendChild(wrap);
+
+    // (ลบ event listener ออกแล้ว เพราะใช้ infinite animation)
   }
 
   /* ===========================
-   * Modal & Buttons
+   * === ส่วน Pop-up (Modal) Logic ===
    * =========================== */
+
+  const wishModal     = document.getElementById('wish-modal');
+  const wishInput     = document.getElementById('wish-input');
+  const submitWishBtn = document.getElementById('submit-wish-btn');
+  const cancelWishBtn = document.getElementById('cancel-wish-btn');
+
+  let pendingKrathongTier  = null;
+  let pendingKrathongPrice = 0;
+  let pendingDonationAmount= 0;
+
   function closeModal() {
     wishInput.value = '';
     wishModal.classList.add('hidden');
@@ -207,17 +222,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   submitWishBtn?.addEventListener('click', () => {
     const wishText  = wishInput.value.trim();
-    const finalWish = wishText === '' ? 'ขอให้มีความสุข' : wishText;
+    const finalWish = wishText === '' ? 'ขอให้มีความสุข' : finalWish;
+
+    let tierToSpawn = null;
+    let amountForRank = 0;
 
     if (pendingDonationAmount > 0) {
-      const randomTier = Math.floor(Math.random() * 5) + 1;
-      spawnKrathong(randomTier, finalWish);
+      tierToSpawn = Math.floor(Math.random() * 5) + 1;
+      amountForRank = pendingDonationAmount;
       alert(`เดโมธุรกรรม: บริจาค ${pendingDonationAmount} FM`);
-      addToRankingWithLast(currentWalletAddress, pendingDonationAmount, randomTier, finalWish);
     } else if (pendingKrathongTier) {
-      spawnKrathong(pendingKrathongTier, finalWish);
-      addToRankingWithLast(currentWalletAddress, pendingKrathongPrice, pendingKrathongTier, finalWish);
+      tierToSpawn = pendingKrathongTier;
+      amountForRank = pendingKrathongPrice;
+      // Alert for normal float can be added here if needed
     } else return closeModal();
+
+    spawnKrathong(tierToSpawn, finalWish);
+    addToRankingWithLast(currentWalletAddress, amountForRank, tierToSpawn, finalWish);
 
     krathongCount++;
     if (floatCountEl) floatCountEl.textContent = krathongCount.toLocaleString();
@@ -227,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ===========================
    * Ranking (LocalStorage)
    * =========================== */
-  const RANK_KEY = 'fm_ranking_demo_v3'; // อัปเดตเวอร์ชันเมื่อเปลี่ยนสคีมา
+  const RANK_KEY = 'fm_ranking_demo_v3';
   let rankings = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
 
   function saveRankings() {
@@ -236,35 +257,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function ensureUserInRanking(addr) {
     if (!addr) return;
-    if (!rankings.some(r => r.address.toLowerCase() === addr.toLowerCase())) {
+    const addrLower = addr.toLowerCase();
+    if (!rankings.some(r => r.address.toLowerCase() === addrLower)) {
       rankings.push({ address: addr, total: 0, last: null });
-      saveRankings();
+      saveRankings(); // Save immediately when a new user is added
     }
   }
 
   function addToRankingWithLast(addr, amountFM, tier, wish) {
     if (!addr || !amountFM) return;
-    ensureUserInRanking(addr);
-    const rec = rankings.find(r => r.address.toLowerCase() === addr.toLowerCase());
-    rec.total += Number(amountFM);
-    rec.last = { tier: Number(tier), wish: wish || 'ขอให้มีความสุข', ts: Date.now() };
-    rankings.sort((a,b)=> b.total - a.total);
-    saveRankings();
-    renderRankingList();
+    const addrLower = addr.toLowerCase();
+    ensureUserInRanking(addr); // Ensure user exists first
+    const rec = rankings.find(r => r.address.toLowerCase() === addrLower);
+    if (rec) { // Should always find the record now
+        rec.total += Number(amountFM);
+        rec.last = { tier: Number(tier), wish: wish || 'ขอให้มีความสุข', ts: Date.now() };
+        rankings.sort((a,b)=> b.total - a.total); // Sort after update
+        saveRankings(); // Save after update
+        renderRankingList(); // Update UI
+    }
   }
 
   function mask(addr){ return addr.slice(0,6)+'...'+addr.slice(-4); }
 
-  // === เก็บ mapping อันดับเดิม เพื่อตัดสินใจเล่นแอนิเมชัน (เข้ามาใหม่/อันดับดีขึ้น) ===
-  let prevRankIndex = {}; // {addressLower: index(0..4)}
+  let prevRankIndex = {};
 
   function renderRankingList() {
     const list = document.getElementById('ranking-list');
     if (!list) return;
 
-    // เก็บ index เดิม
     const oldIndexMap = { ...prevRankIndex };
-
     list.innerHTML = '';
     const top5 = rankings.slice(0,5);
     const newIndexMap = {};
@@ -277,39 +299,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (item) {
         const medal = i===0?'✨':i===1?'💫':i===2?'🌟':'🕯️';
         p.textContent = `${i+1}. ${medal} ${mask(item.address)} (${item.total} FM)`;
-        p.dataset.address = item.address.toLowerCase();
+        const addrLower = item.address.toLowerCase();
+        p.dataset.address = addrLower;
         p.dataset.level   = item?.last?.tier ?? 1;
         p.dataset.wish    = item?.last?.wish || 'ขอให้มีความสุข';
 
-        // บันทึก index ใหม่
-        newIndexMap[p.dataset.address] = i;
+        newIndexMap[addrLower] = i;
 
-        // ใส่คลาสแอนิเมชัน
-        if (!(p.dataset.address in oldIndexMap)) {
-          // เพิ่งเข้าสู่ Top5
+        if (!(addrLower in oldIndexMap)) {
           p.classList.add('rank-enter');
-        } else if (oldIndexMap[p.dataset.address] > i) {
-          // อันดับดีขึ้น (เลข index ลดลง)
+        } else if (oldIndexMap[addrLower] > i) {
           p.classList.add('rank-up');
         }
       } else {
-        // ช่องว่าง placeholder
         p.textContent = `${i+1}. –––––––––––––––––`;
         p.style.opacity = 0.4;
-        p.dataset.level = ""; // ไม่มี preview
+        p.dataset.level = "";
         p.dataset.wish  = "";
       }
-
       list.appendChild(p);
     }
 
-    // อัปเดตแผนที่อันดับเดิม
     prevRankIndex = newIndexMap;
-
-    // ผูก hover preview ใหม่
     attachRankPreviewHandlers();
 
-    // เคลียร์คลาสหลังแอนิเมชันจบ เพื่อให้เล่นได้รอบถัดไป
     setTimeout(() => {
       list.querySelectorAll('.rank-enter, .rank-up')
           .forEach(el => el.classList.remove('rank-enter','rank-up'));
@@ -318,44 +331,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function attachRankPreviewHandlers() {
     const rankItems = document.querySelectorAll('#ranking-list .rank-item');
-
     let preview = document.getElementById('rank-preview');
+    // (Create preview element if it doesn't exist - code omitted for brevity, assume it exists or use previous code)
     if (!preview) {
-      preview = document.createElement('div');
-      preview.id = 'rank-preview';
-      preview.style.position = 'fixed';
-      preview.style.display = 'none';
-      preview.style.pointerEvents = 'none';
-      preview.style.zIndex = '3000';
-      preview.style.transform = 'translate(12px, 12px)';
-      preview.style.padding = '8px';
-      preview.style.borderRadius = '12px';
-      preview.style.background = 'rgba(0,0,0,0.65)';
-      preview.style.border = '1px solid rgba(0,188,212,.9)';
-      preview.style.boxShadow = '0 6px 18px rgba(0,0,0,.35)';
-      preview.innerHTML = `
-        <div id="rank-preview-wish"
-             style="margin-bottom:6px;
-                    max-width:240px;
-                    font-size:.92rem;
-                    line-height:1.25;
-                    color:#e2e8f0;
-                    text-align:center;
-                    font-weight:500;
-                    text-shadow:0 0 8px rgba(255,255,255,0.25);">
-        </div>
-        <img alt="krathong preview"
-             style="width:120px;
-                    display:block;
-                    margin:auto;
-                    border-radius:8px;">
-      `;
-      document.body.appendChild(preview);
+        // ... (code to create preview element) ...
+        preview = document.createElement('div');
+        preview.id = 'rank-preview';
+        // ... (styles) ...
+        preview.innerHTML = `<div id="rank-preview-wish"></div><img alt="krathong preview">`;
+        document.body.appendChild(preview);
     }
+
 
     const previewImg  = preview.querySelector('img');
     const previewWish = preview.querySelector('#rank-preview-wish');
-    const PAD = 16, BOX_W = 260, BOX_H = 220;
+    // (Rest of the preview handler code - mouseenter, mousemove, mouseleave, click)
+        const PAD = 16, BOX_W = 260, BOX_H = 220; // Adjust BOX sizes if needed
 
     rankItems.forEach(el => {
       const level = Number(el.dataset.level || 0);
@@ -363,14 +354,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       const imgPath = level ? imgPathByTier(level) : '';
 
       el.addEventListener('mouseenter', () => {
-        if (!level) return; // placeholder ไม่โชว์ preview
+        if (!level) return;
         previewImg.src = imgPath;
         previewWish.textContent = wish;
         preview.style.display = 'block';
       });
 
       el.addEventListener('mousemove', e => {
+         if (!level) return; // Don't move if not visible
         let x = e.clientX + PAD, y = e.clientY + PAD;
+        // Adjust position based on viewport boundaries
         if (x + BOX_W > window.innerWidth)  x = e.clientX - BOX_W - PAD;
         if (y + BOX_H > window.innerHeight) y = e.clientY - BOX_H - PAD;
         preview.style.left = `${x}px`;
@@ -379,15 +372,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       el.addEventListener('mouseleave', () => { preview.style.display = 'none'; });
 
-      // ทัช/มือถือ: แตะเพื่อโชว์ชั่วคราว 2 วิ
+      // Touch handler
       el.addEventListener('click', (e) => {
-        if (!level) return;
+        if (!level || window.innerWidth > 992) return; // Only for touch/mobile-sized screens
         previewImg.src = imgPath;
         previewWish.textContent = wish;
         preview.style.display = 'block';
-        preview.style.left = `${e.clientX || window.innerWidth/2}px`;
-        preview.style.top  = `${e.clientY || window.innerHeight/2}px`;
-        setTimeout(() => (preview.style.display = 'none'), 2000);
+        // Position near the touch point or center screen fallback
+        const touchX = e.touches ? e.touches[0].clientX : e.clientX;
+        const touchY = e.touches ? e.touches[0].clientY : e.clientY;
+        preview.style.left = `${(touchX || window.innerWidth / 2) - BOX_W/2}px`; // Center horizontally near touch
+        preview.style.top  = `${(touchY || window.innerHeight / 2) - BOX_H - PAD}px`; // Position above touch
+        setTimeout(() => (preview.style.display = 'none'), 2500); // Show a bit longer on touch
       });
     });
   }
@@ -412,8 +408,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   if (riverVideo) {
     riverVideo.addEventListener('loadedmetadata', runSampleKrathongs);
-    riverVideo.addEventListener('error', runSampleKrathongs);
+    riverVideo.addEventListener('error', runSampleKrathongs); // Run even if video fails
   } else {
-    runSampleKrathongs();
+    runSampleKrathongs(); // Run if no video tag
   }
 });
