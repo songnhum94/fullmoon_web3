@@ -93,8 +93,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const bgMusic        = document.getElementById('bg-music');
   const ASSETS_BASE    = './assets/'; // Define base path for assets
 
-  if (riverVideo) riverVideo.volume = 0.15;
-  if (bgMusic)    bgMusic.volume    = 0.07;
+  if (riverVideo) riverVideo.volume = 0.15; // เสียงวิดีโอ
+  if (bgMusic)    bgMusic.volume    = 0.07; // เสียงเพลง
 
   function unmuteMediaOnFirstClick() {
     let videoPromise = Promise.resolve();
@@ -117,11 +117,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log("Audio unmuted and playing.");
       }).catch((error) => {
         console.warn("Audio play() failed (might be expected):", error);
-        // Sometimes iOS needs a separate interaction for audio vs video
       });
     }
 
-    // Remove listener after attempting both, regardless of success
     Promise.allSettled([videoPromise, audioPromise]).then(() => {
          console.log("Removing unmute listener.");
          document.body.removeEventListener('click', unmuteMediaOnFirstClick);
@@ -129,12 +127,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   document.body.addEventListener('click', unmuteMediaOnFirstClick);
 
-  // === ฟังก์ชันที่หายไป (เพิ่มกลับเข้ามา) ===
   function imgPathByTier(tier) {
-    const t = Math.min(Math.max(Number(tier)||1, 1), 5); // Ensure tier is 1-5
+    const t = Math.min(Math.max(Number(tier)||1, 1), 5);
     return `${ASSETS_BASE}${t}.png`;
   }
-  // === จบส่วนที่เพิ่ม ===
 
   // 3. สร้างกระทง
   function spawnKrathong(tier, wishText) {
@@ -145,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const img = document.createElement('img');
     img.className = 'krathong-img-inner';
-    img.src = imgPathByTier(tier); // <== ตรวจสอบว่าเรียกใช้ถูกต้อง
+    img.src = imgPathByTier(tier);
 
     const tooltip = document.createElement('span');
     tooltip.className = 'wish-tooltip';
@@ -227,7 +223,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   submitWishBtn?.addEventListener('click', () => {
     const wishText  = wishInput ? wishInput.value.trim() : '';
-    const finalWish = wishText === '' ? 'ขอให้มีความสุข' : finalWish; // <-- แก้ไข: ต้องเป็น wishText
+    // === ส่วนที่แก้ไข (แก้บั๊ก finalWish) ===
+    const finalWish = wishText === '' ? 'ขอให้มีความสุข' : wishText; // ใช้ wishText ไม่ใช่ finalWish
+    // === จบส่วนที่แก้ไข ===
 
     let tierToSpawn = null;
     let amountForRank = 0;
@@ -239,10 +237,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (pendingKrathongTier) {
       tierToSpawn = pendingKrathongTier;
       amountForRank = pendingKrathongPrice;
-      // Alert for normal float can be added here if needed
     } else return closeModal();
 
-    if (tierToSpawn !== null) { // Make sure we have a tier
+    if (tierToSpawn !== null) {
         spawnKrathong(tierToSpawn, finalWish);
         addToRankingWithLast(currentWalletAddress, amountForRank, tierToSpawn, finalWish);
 
@@ -259,10 +256,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   let rankings = [];
    try {
        rankings = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
-       if (!Array.isArray(rankings)) rankings = []; // Ensure it's an array
+       if (!Array.isArray(rankings)) rankings = [];
    } catch (e) {
        console.error("Failed to parse rankings from localStorage:", e);
-       rankings = []; // Reset if parsing fails
+       rankings = [];
    }
 
   function saveRankings() {
@@ -278,7 +275,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const addrLower = addr.toLowerCase();
     if (!rankings.some(r => r.address.toLowerCase() === addrLower)) {
       rankings.push({ address: addr, total: 0, last: null });
-      // Don't save here, save only after updating total/last
     }
   }
 
@@ -291,7 +287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         rec.total += Number(amountFM);
         rec.last = { tier: Number(tier), wish: wish || 'ขอให้มีความสุข', ts: Date.now() };
         rankings.sort((a,b)=> b.total - a.total);
-        saveRankings(); // Save after successful update
+        saveRankings();
         renderRankingList();
     } else {
         console.error("Could not find user record after ensureUserInRanking:", addr);
@@ -316,7 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const p = document.createElement('p');
       p.className = 'rank-item';
 
-      if (item && item.address) { // Check if item and address exist
+      if (item && item.address) {
         const medal = i===0?'✨':i===1?'💫':i===2?'🌟':'🕯️';
         p.textContent = `${i+1}. ${medal} ${mask(item.address)} (${item.total} FM)`;
         const addrLower = item.address.toLowerCase();
@@ -341,7 +337,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     prevRankIndex = newIndexMap;
-    attachRankPreviewHandlers(); // Re-attach handlers
+    attachRankPreviewHandlers();
 
     setTimeout(() => {
       list.querySelectorAll('.rank-enter, .rank-up')
@@ -361,24 +357,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         preview.style.pointerEvents = 'none';
         preview.style.zIndex = '3000';
         preview.style.transform = 'translate(12px, 12px)';
-        preview.style.padding = '8px'; // Adjusted padding
-        preview.style.borderRadius = '10px'; // Adjusted radius
-        preview.style.background = 'rgba(0,0,0,0.7)'; // Slightly more opaque
-        preview.style.border = '1px solid var(--neon-blue)'; // Use variable
-        preview.style.boxShadow = '0 4px 12px rgba(0,0,0,.3)'; // Soft shadow
+        preview.style.padding = '8px';
+        preview.style.borderRadius = '10px';
+        preview.style.background = 'rgba(0,0,0,0.7)';
+        preview.style.border = '1px solid var(--neon-blue)';
+        preview.style.boxShadow = '0 4px 12px rgba(0,0,0,.3)';
         preview.innerHTML = `
             <div id="rank-preview-wish"
                  style="margin-bottom:6px;
-                        max-width:180px; /* Limit width */
-                        font-size:.9rem; /* Slightly smaller */
+                        max-width:180px;
+                        font-size:.9rem;
                         line-height:1.3;
-                        color:#fff; /* White text */
+                        color:#fff;
                         text-align:center;
-                        font-weight:normal; /* Normal weight */
+                        font-weight:normal;
                         text-shadow: none;">
             </div>
             <img alt="krathong preview"
-                 style="width:90px; /* Smaller image */
+                 style="width:90px;
                         display:block;
                         margin:auto;
                         border-radius:6px;">
@@ -389,20 +385,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const previewImg  = preview.querySelector('img');
     const previewWish = preview.querySelector('#rank-preview-wish');
-    // Adjust box size estimation if needed
     const PAD = 16, BOX_W = 200, BOX_H = 150;
 
     rankItems.forEach(el => {
-      // Remove previous listeners to prevent duplicates if function is called multiple times
       el.removeEventListener('mouseenter', el._rankMouseEnter);
       el.removeEventListener('mousemove', el._rankMouseMove);
       el.removeEventListener('mouseleave', el._rankMouseLeave);
       el.removeEventListener('click', el._rankMouseClick);
 
-
       const level = Number(el.dataset.level || 0);
       const wish  = el.dataset.wish || '';
-      const imgPath = level ? imgPathByTier(level) : ''; // Use the function
+      const imgPath = level ? imgPathByTier(level) : '';
 
       el._rankMouseEnter = () => {
         if (!level || !preview || !previewImg || !previewWish) return;
@@ -429,21 +422,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         preview.style.display = 'block';
         const touchX = e.touches ? e.touches[0].clientX : e.clientX;
         const touchY = e.touches ? e.touches[0].clientY : e.clientY;
-        // Position slightly above the touch point
         preview.style.left = `${(touchX || window.innerWidth / 2) - BOX_W / 2}px`;
-        preview.style.top  = `${(touchY || window.innerHeight / 2) - BOX_H - PAD * 2}px`; // Move further up
-        // Use a flag to prevent immediate hide on the same click/touch
+        preview.style.top  = `${(touchY || window.innerHeight / 2) - BOX_H - PAD * 2}px`;
         let hideTimeout = setTimeout(() => {
             if (preview) preview.style.display = 'none';
         }, 2500);
-        // Clear timeout if another touch occurs quickly
         preview.ontouchstart = () => clearTimeout(hideTimeout);
       };
 
       el.addEventListener('mouseenter', el._rankMouseEnter);
       el.addEventListener('mousemove', el._rankMouseMove);
       el.addEventListener('mouseleave', el._rankMouseLeave);
-      el.addEventListener('click', el._rankMouseClick); // Handles touch as well
+      el.addEventListener('click', el._rankMouseClick);
     });
   }
 
@@ -461,21 +451,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, delay);
   }
   function runSampleKrathongs() {
-    // Check if riverContainer has a valid height before spawning
     if (riverContainer && riverContainer.clientHeight > 0) {
         spawnAndCount(1, 'กระทงทดสอบ 1', 1000);
         spawnAndCount(2, 'กระทงทดสอบ 2', 3000);
         spawnAndCount(3, 'กระทงทดสอบ 3', 6000);
     } else {
-        // If height is still 0, wait a bit longer and try again once
         console.warn("River container height 0 on initial load, delaying sample spawn.");
         setTimeout(() => {
              if (riverContainer && riverContainer.clientHeight > 0) {
-                 runSampleKrathongs(); // Call itself again
+                 runSampleKrathongs();
              } else {
                  console.error("River container height still 0 after delay. Samples not spawned.");
              }
-        }, 500); // Wait 500ms
+        }, 500);
     }
   }
 
@@ -490,7 +478,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     riverVideo.addEventListener('loadedmetadata', runSamplesOnce);
     riverVideo.addEventListener('error', runSamplesOnce);
-    // Fallback: If video takes too long, run samples after a delay anyway
     setTimeout(() => {
         if (!samplesRun) {
             console.warn("Video metadata timeout. Running samples anyway.");
