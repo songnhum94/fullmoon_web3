@@ -32,7 +32,7 @@ body{
   display:flex;flex-direction:column;align-items:center}
 .river-3d-area h2{color:#caa9ff;text-shadow:0 0 8px var(--shadow-purple);margin:0 0 1rem;border-bottom:1px dashed var(--neon-purple);padding-bottom:.5rem}
 
-/* กรอบแม่น้ำ 16:9 */
+/* กรอบแม่น้ำ 16:9 (ใช้กับทุกขนาดจอ) */
 #river-simulation {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -68,15 +68,15 @@ body{
 
 
 /* === Krathong list (ปรับให้กะทัดรัด) === */
-.krathong-options{display:flex;flex-direction:column;gap:0.7rem; /* เดิม: .9rem */ max-height:520px;overflow-y:auto;padding-right:6px}
+.krathong-options{display:flex;flex-direction:column;gap:0.7rem; max-height:520px;overflow-y:auto;padding-right:6px}
 
 .krathong-card{
   background:linear-gradient(180deg,#1e2942,#182139);
-  border-radius: 10px; /* เดิม: 12px */
-  padding: 0.7rem; /* เดิม: .9rem */
+  border-radius: 10px;
+  padding: 0.7rem;
   display: flex;
   align-items: center;
-  gap: 0.7rem; /* เดิม: .9rem */
+  gap: 0.7rem;
   box-shadow:0 0 8px rgba(0,0,0,.35);
   transition:.15s;
   border-left:3px solid var(--neon-blue);
@@ -84,22 +84,21 @@ body{
 .krathong-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,188,212,.35)}
 
 .krathong-img{
-  width: 60px; /* เดิม: 76px */
-  height: 60px; /* เดิม: 76px */
-  border-radius: 10px; /* เดิม: 12px */
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
   object-fit: cover;
-  border: 2px solid var(--neon-blue); /* เดิม: 3px */
+  border: 2px solid var(--neon-blue);
 }
 .krathong-info{flex-grow:1}
-.krathong-info h3{margin:0 0 .2rem 0;color:var(--neon-blue); font-size: 1rem;} /* ปรับขนาด h3 เล็กน้อย */
-.krathong-info p{margin:0;font-size:.9rem; /* เดิม: .93rem */ color:var(--text-medium)}
+.krathong-info h3{margin:0 0 .2rem 0;color:var(--neon-blue); font-size: 1rem;}
+.krathong-info p{margin:0;font-size:.9rem; color:var(--text-medium)}
 
 .krathong-card .buy-btn{
-  padding: 0.6rem 0.9rem; /* เดิม: .75rem 1.2rem (จาก .neon-glow-btn) */
-  font-size: 0.9rem; /* ลดขนาด font เล็กน้อย */
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
   background-color:#4CAF50;
   box-shadow:0 0 10px rgba(76,175,80,.5);
-  /* (สไตล์อื่น ๆ จาก .neon-glow-btn จะถูก override หรือคงไว้ตามปกติ) */
 }
 .krathong-card .buy-btn:hover{background-color:#66bb6a;box-shadow:0 0 15px rgba(76,175,80,.7)}
 /* === จบส่วนปรับ === */
@@ -172,6 +171,7 @@ body{
  * =================================
  */
 
+/* === สำหรับ Tablet และ มือถือแนวนอน === */
 @media (max-width:992px){
   .main-container{
     grid-template-columns:1fr;
@@ -180,25 +180,32 @@ body{
   .ranking-dashboard{grid-column:1;grid-row:1}
   .river-3d-area{grid-column:1;grid-row:2}
   .krathong-selection{grid-column:1;grid-row:3}
-  #river-simulation{height:380px}
+
+  /* === แก้ไข: ลบ height คงที่ === */
+  /* #river-simulation{height:380px} */
+
   .donation-card__controls{flex-direction:row}
 }
 
+/* === สำหรับ มือถือแนวตั้ง === */
 @media (max-width:768px){
   .header{flex-direction:column;gap:1rem;padding:1rem}
   .neon-text{font-size:1.9rem}
   .wallet-btn,.neon-glow-btn{width:100%;text-align:center}
   .main-container{padding:1rem;gap:1rem}
-  #river-simulation{height:320px}
+
+  /* === แก้ไข: ลบ height คงที่ === */
+  /* #river-simulation{height:320px} */
+
   .donation-card__controls{flex-direction:column}
   .donation-btn{width:100%}
 
-  /* === โค้ดใหม่: ปรับตำแหน่งกระทงให้สูงขึ้นในมือถือ === */
+  /* === แก้ไข: ลบการ override ตำแหน่งกระทง === */
+  /*
   .krathong-2d {
-    top: var(--krathong-start-y, 50%) !important; /* ค่า default 50% หรือใช้ค่าจาก JS */
-    /* !important เพื่อให้แน่ใจว่า override ค่าเดิม */
+    top: var(--krathong-start-y, 50%) !important;
   }
-  /* === จบโค้ดใหม่ === */
+  */
 }
 
 
