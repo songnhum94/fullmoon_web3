@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="th">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23ffd54f'/%3E%3C/svg%3E">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -13,49 +15,65 @@
   </header>
 
   <main class="main-container">
-    <!-- ซ้าย: เลือกกระทง -->
+    
+    <aside class="ranking-dashboard neon-box">
+      <h2>🏆 Ranking ผู้มีศรัทธาสูงสุด</h2>
+      <div id="ranking-list">
+        <p class="rank-item" data-level="5">1. ✨ 0xAbc...xyz (1000 FM)</p>
+        <p class="rank-item" data-level="4">2. 💫 0xDef...uvw (500 FM)</p>
+        <p class="rank-item" data-level="3">3. 🌟 0xGhi...rst (250 FM)</p>
+        <p class="rank-item" data-level="1">4. 🕯️ ...</p>
+      </div>
+    </aside>
+
+    <section class="river-3d-area">
+      <h2>🌊 FLASH MOON RIVER</h2> <div id="river-simulation">
+        <video src="./assets/river-video.mp4" class="river-video-bg" autoplay loop muted playsinline></video>
+        <img src="./assets/foreground-dock.png" class="river-foreground">
+        </div>
+      <div class="krathong-counter">
+        <p>จำนวนกระทงที่ลอยแล้ว: <b id="float-count">1,234</b> กระทง</p> </div>
+    </section>
+
     <aside class="krathong-selection neon-box">
       <h2>🕯️ เลือกกระทงลอยบูชา (FM Token)</h2>
 
       <div class="krathong-options">
         <div class="krathong-card" data-level="1" data-price="1">
-          <img src="./1.jfif" alt="Tier 1 - Coconut Krathong" class="krathong-img">
+          <img src="./assets/1.png" alt="Tier 1" class="krathong-img">
+
           <div class="krathong-info">
             <h3>🥥 กระทงกะลา (Tier 1)</h3>
             <p>ราคา: <b>1 FM</b></p>
           </div>
           <button class="buy-btn neon-glow-btn">ลอย 1 FM</button>
         </div>
-
         <div class="krathong-card" data-level="2" data-price="3">
-          <img src="./2.jfif" alt="Tier 2 - Pink Lotus" class="krathong-img">
+          <img src="./assets/2.png" alt="Tier 2" class="krathong-img">
           <div class="krathong-info">
             <h3>🌿 กระทงใบตอง (Tier 2)</h3>
             <p>ราคา: <b>3 FM</b></p>
           </div>
           <button class="buy-btn neon-glow-btn">ลอย 3 FM</button>
         </div>
-
         <div class="krathong-card" data-level="3" data-price="5">
-          <img src="./3.jfif" alt="Tier 3 - Orange Lotus" class="krathong-img">
+          <img src="./assets/3.png" alt="Tier 3" class="krathong-img">
           <div class="krathong-info">
             <h3>🍞 กระทงขนมปัง (Tier 3)</h3>
             <p>ราคา: <b>5 FM</b></p>
           </div>
           <button class="buy-btn neon-glow-btn">ลอย 5 FM</button>
         </div>
-
         <div class="krathong-card premium" data-level="4" data-price="10">
-          <img src="./4.jfif" alt="Tier 4 - Blue Ring Lotus" class="krathong-img">
+          <img src="./assets/4.png" alt="Tier 4" class="krathong-img">
           <div class="krathong-info">
             <h3>🌸 กระทงดอกบัว (Tier 4)</h3>
             <p>ราคา: <b>10 FM</b></p>
           </div>
           <button class="buy-btn neon-glow-btn">ลอย 10 FM</button>
         </div>
-
         <div class="krathong-card ultra" data-level="5" data-price="100">
-          <img src="./5.jfif" alt="Tier 5 - Jewel Lotus" class="krathong-img">
+          <img src="./assets/5.png" alt="Tier 5" class="krathong-img">
           <div class="krathong-info">
             <h3>👑 กระทงเพชรพลอย (Tier 5)</h3>
             <p>ราคา: <b>100 FM</b></p>
@@ -66,50 +84,30 @@
 
       <hr/>
 
-      <!-- บริจาค: ปรับให้กะทัดรัดและเข้าชุด -->
       <div class="donation-card">
         <div class="donation-card__title">💖 บริจาคเพื่อการกุศล</div>
         <div class="donation-card__controls">
           <input type="number" id="donation-amount" placeholder="จำนวน FM" min="1" class="donation-input">
           <button id="donate-btn" class="donation-btn neon-glow-btn">🤲 บริจาค</button>
         </div>
-        <small class="donation-note">* เดโม่ธุรกรรม — ยังไม่หักเหรียญจริง</small>
-      </div>
+        </div>
     </aside>
 
-    <!-- กลาง: แม่น้ำ 3D -->
-    <section class="river-3d-area">
-      <h2>🌊 แม่น้ำจำลอง 3D</h2>
-      <div id="river-simulation">
-        <p>กำลังโหลด 3D ...</p>
-      </div>
-      <div class="krathong-counter">
-        <p>จำนวนกระทงที่ลอยแล้ว: <b id="float-count">1,234</b> ดวง</p>
-      </div>
-    </section>
-
-    <!-- ขวา: Ranking -->
-    <aside class="ranking-dashboard neon-box">
-      <h2>🏆 Ranking ผู้มีศรัทธาสูงสุด</h2>
-      <div id="ranking-list">
-        <p class="rank-item">1. ✨ 0xAbc...xyz (1000 FM)</p>
-        <p class="rank-item">2. 💫 0xDef...uvw (500 FM)</p>
-        <p class="rank-item">3. 🌟 0xGhi...rst (250 FM)</p>
-        <p class="rank-item">4. 🕯️ ...</p>
-      </div>
-    </aside>
   </main>
 
-  <footer class="footer">
-    <p>Powered by Web3.0 &copy; 2025 Full Moon Project</p>
-  </footer>
+  <div id="wish-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>🙏 ใส่คำอธิษฐานของคุณ</h2>
+      <textarea id="wish-input" rows="3" placeholder="ขอให้..."></textarea>
+      <div class="modal-buttons">
+        <button id="cancel-wish-btn" class="neon-glow-btn modal-btn-cancel">ยกเลิก</button>
+        <button id="submit-wish-btn" class="neon-glow-btn">ลอยกระทง</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- libs -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- NEW: GLTFLoader (non-module, ใช้กับ THREE global) -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
-
-<script type="module" src="./app.js"></script>
+  <audio id="bg-music" src="./assets/music.mp3" autoplay loop muted></audio>
+  <script type="module" src="./app.js"></script>
 
 </body>
 </html>

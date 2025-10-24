@@ -20,7 +20,9 @@ body{
   transition:.2s;box-shadow:0 0 10px var(--shadow-light);text-transform:uppercase}
 .wallet-btn:hover,.neon-glow-btn:hover{background:var(--neon-purple);color:var(--text-light);box-shadow:0 0 16px var(--shadow-purple);transform:translateY(-2px)}
 
-.main-container{display:grid;grid-template-columns:1fr 2.4fr 1fr;gap:1.2rem;padding:1.4rem;flex-grow:1;overflow-y:auto;align-items:start}
+/* สัดส่วน Desktop */
+.main-container{display:grid;grid-template-columns:320px 1fr 360px;gap:1.2rem;padding:1.4rem;flex-grow:1;overflow-y:auto;align-items:start}
+
 .neon-box{background:linear-gradient(180deg,rgba(30,41,66,.7),rgba(20,27,45,.7));backdrop-filter:blur(6px);
   border:2px solid var(--neon-purple);border-radius:14px;padding:1.2rem;box-shadow:0 0 20px var(--shadow-purple)}
 .neon-box h2{color:var(--neon-blue);text-shadow:0 0 8px var(--shadow-light);margin:0 0 1rem;border-bottom:1px dashed var(--neon-blue);padding-bottom:.5rem}
@@ -29,20 +31,78 @@ body{
 .river-3d-area{background:var(--bg-medium);border:2px solid var(--neon-blue);border-radius:14px;padding:1rem 1.2rem;box-shadow:0 0 20px var(--shadow-light);
   display:flex;flex-direction:column;align-items:center}
 .river-3d-area h2{color:#caa9ff;text-shadow:0 0 8px var(--shadow-purple);margin:0 0 1rem;border-bottom:1px dashed var(--neon-purple);padding-bottom:.5rem}
-#river-simulation{width:100%;height:460px;background:#000;border-radius:10px;overflow:hidden;box-shadow:inset 0 0 15px var(--shadow-light);
-  display:flex;justify-content:center;align-items:center}
 
-/* Krathong list */
-.krathong-options{display:flex;flex-direction:column;gap:.9rem;max-height:520px;overflow-y:auto;padding-right:6px}
-.krathong-card{background:linear-gradient(180deg,#1e2942,#182139);border-radius:12px;padding:.9rem;display:flex;align-items:center;gap:.9rem;
-  box-shadow:0 0 8px rgba(0,0,0,.35);transition:.15s;border-left:3px solid var(--neon-blue)}
+/* กรอบแม่น้ำ 16:9 */
+#river-simulation {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 10px;
+  box-shadow: inset 0 0 15px var(--shadow-light);
+  position: relative;
+  overflow: hidden;
+}
+
+/* สไตล์ Video */
+.river-video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1; /* (1) หลังสุด */
+}
+
+/* สไตล์ภาพสะพาน */
+.river-foreground {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: auto;
+  z-index: 15; /* (15) อยู่หน้ากระทง (10) */
+  pointer-events: none;
+}
+
+
+/* === Krathong list (ปรับให้กะทัดรัด) === */
+.krathong-options{display:flex;flex-direction:column;gap:0.7rem; /* เดิม: .9rem */ max-height:520px;overflow-y:auto;padding-right:6px}
+
+.krathong-card{
+  background:linear-gradient(180deg,#1e2942,#182139);
+  border-radius: 10px; /* เดิม: 12px */
+  padding: 0.7rem; /* เดิม: .9rem */
+  display: flex;
+  align-items: center;
+  gap: 0.7rem; /* เดิม: .9rem */
+  box-shadow:0 0 8px rgba(0,0,0,.35);
+  transition:.15s;
+  border-left:3px solid var(--neon-blue);
+}
 .krathong-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,188,212,.35)}
-.krathong-img{width:76px;height:76px;border-radius:12px;object-fit:cover;border:3px solid var(--neon-blue)}
+
+.krathong-img{
+  width: 60px; /* เดิม: 76px */
+  height: 60px; /* เดิม: 76px */
+  border-radius: 10px; /* เดิม: 12px */
+  object-fit: cover;
+  border: 2px solid var(--neon-blue); /* เดิม: 3px */
+}
 .krathong-info{flex-grow:1}
-.krathong-info h3{margin:0 0 .2rem 0;color:var(--neon-blue)}
-.krathong-info p{margin:0;font-size:.93rem;color:var(--text-medium)}
-.krathong-card .buy-btn{background-color:#4CAF50;box-shadow:0 0 10px rgba(76,175,80,.5)}
+.krathong-info h3{margin:0 0 .2rem 0;color:var(--neon-blue); font-size: 1rem;} /* ปรับขนาด h3 เล็กน้อย */
+.krathong-info p{margin:0;font-size:.9rem; /* เดิม: .93rem */ color:var(--text-medium)}
+
+.krathong-card .buy-btn{
+  padding: 0.6rem 0.9rem; /* เดิม: .75rem 1.2rem (จาก .neon-glow-btn) */
+  font-size: 0.9rem; /* ลดขนาด font เล็กน้อย */
+  background-color:#4CAF50;
+  box-shadow:0 0 10px rgba(76,175,80,.5);
+  /* (สไตล์อื่น ๆ จาก .neon-glow-btn จะถูก override หรือคงไว้ตามปกติ) */
+}
 .krathong-card .buy-btn:hover{background-color:#66bb6a;box-shadow:0 0 15px rgba(76,175,80,.7)}
+/* === จบส่วนปรับ === */
 
 /* Donation box — compact */
 .donation-card{
@@ -62,20 +122,68 @@ body{
 #ranking-list .rank-item{background:var(--bg-light);padding:.8rem;margin-bottom:.7rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;
   font-size:.95rem;border-left:3px solid var(--neon-blue);transition:transform .15s}
 #ranking-list .rank-item:hover{transform:translateX(5px);box-shadow:0 0 10px rgba(0,188,212,.3)}
+#rank-preview {
+  position: fixed;
+  display: none;
+  pointer-events: none;
+  z-index: 3000;
+  transform: translate(12px, 12px); /* เยื้องจากเม้าส์นิดนึง */
+  padding: 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--neon-blue);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+}
+#rank-preview img {
+  width: 110px;   /* ปรับขนาดพรีวิวได้ตามชอบ */
+  height: auto;
+  display: block;
+}
+/* สไตล์กระทง 2D (เล่นวน) */
+.krathong-2d {
+  position: absolute;
+  width: 80px;
+  height: auto;
+  top: var(--krathong-start-y);
+  left: -100px;
+  animation: krathongFloat 15s linear infinite;
+  z-index: 10; /* (10) กระทง */
+  opacity: 1;
+  cursor: pointer;
+}
+/* รูปภาพข้างใน div */
+.krathong-img-inner {
+  width: 100%;
+  display: block;
+}
 
-.footer{background:var(--bg-medium);text-align:center;padding:.9rem;margin-top:auto;border-top:2px solid var(--neon-purple);
-  box-shadow:0 0 15px var(--shadow-purple);font-size:.9rem;color:var(--text-medium)}
+/* Animation กระทง 2D (ชัด 100% จนจบ) */
+@keyframes krathongFloat {
+  0% { left: -100px; transform: translateY(0) rotate(0deg); opacity: 1; }
+  25% { transform: translateY(-10px) rotate(5deg); }
+  50% { transform: translateY(10px) rotate(-5deg); }
+  75% { transform: translateY(-5px) rotate(2deg); }
+  100% { left: 110%; transform: translateY(0) rotate(0deg); opacity: 1; }
+}
 
-/* Responsive */
-@media (max-width:1200px){.main-container{grid-template-columns:1.1fr 2fr 1fr}}
+
+/* * =================================
+ * === ส่วน Responsive (สำคัญ) ===
+ * =================================
+ */
+
 @media (max-width:992px){
-  .main-container{grid-template-columns:1fr;grid-template-rows:auto auto auto}
-  .krathong-selection{grid-column:1;grid-row:1}
+  .main-container{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto auto
+  }
+  .ranking-dashboard{grid-column:1;grid-row:1}
   .river-3d-area{grid-column:1;grid-row:2}
-  .ranking-dashboard{grid-column:1;grid-row:3}
+  .krathong-selection{grid-column:1;grid-row:3}
   #river-simulation{height:380px}
   .donation-card__controls{flex-direction:row}
 }
+
 @media (max-width:768px){
   .header{flex-direction:column;gap:1rem;padding:1rem}
   .neon-text{font-size:1.9rem}
@@ -84,4 +192,170 @@ body{
   #river-simulation{height:320px}
   .donation-card__controls{flex-direction:column}
   .donation-btn{width:100%}
+
+  /* === โค้ดใหม่: ปรับตำแหน่งกระทงให้สูงขึ้นในมือถือ === */
+  .krathong-2d {
+    top: var(--krathong-start-y, 50%) !important; /* ค่า default 50% หรือใช้ค่าจาก JS */
+    /* !important เพื่อให้แน่ใจว่า override ค่าเดิม */
+  }
+  /* === จบโค้ดใหม่ === */
+}
+
+
+/* * =================================
+ * === สไตล์ Pop-up (Modal) ===
+ * =================================
+ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.modal-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-content {
+  background: linear-gradient(180deg, var(--bg-light), var(--bg-medium));
+  border: 2px solid var(--neon-blue);
+  border-radius: 14px;
+  box-shadow: 0 0 30px var(--shadow-light);
+  padding: 2rem;
+  width: 90%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-content h2 {
+  color: var(--neon-blue);
+  text-shadow: 0 0 8px var(--shadow-light);
+  margin: 0;
+  text-align: center;
+}
+
+#wish-input {
+  background: var(--bg-dark);
+  border: 1px solid var(--neon-blue);
+  border-radius: 10px;
+  color: var(--text-light);
+  padding: 0.75rem 1rem;
+  font-family: 'Kanit', sans-serif;
+  font-size: 1rem;
+  resize: none;
+}
+#wish-input:focus {
+  outline: none;
+  box-shadow: 0 0 10px var(--shadow-light);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.modal-buttons .neon-glow-btn {
+  flex: 1;
+}
+.modal-btn-cancel {
+  background: var(--bg-light);
+  color: var(--text-medium);
+}
+.modal-btn-cancel:hover {
+  background: #ff4d4d;
+  color: #fff;
+  box-shadow: 0 0 15px #ff4d4d;
+}
+
+/* * =================================
+ * === สไตล์ Tooltip คำอธิษฐาน ===
+ * =================================
+ */
+.wish-tooltip {
+  position: absolute;
+  bottom: 90%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(3px);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--neon-blue);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  z-index: 12;
+}
+
+.krathong-2d:hover .wish-tooltip,
+.krathong-2d:active .wish-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* === ปรับขนาด Font หัวข้อ === */
+.krathong-selection h2 {
+  font-size: 1.3rem;
+}
+.ranking-dashboard h2 {
+  font-size: 1.3rem;
+}
+
+/* ===== Rank animations ===== */
+#ranking-list .rank-item{
+  position: relative;
+  transition: transform .35s ease, background-color .3s, box-shadow .3s;
+}
+
+/* เข้าสู่ Top5 ใหม่ */
+.rank-enter{
+  animation: rankPop .6s ease-out, rankGlow 1.2s ease-out;
+}
+@keyframes rankPop{
+  0%{ transform: translateY(10px) scale(.92); opacity:0 }
+  60%{ transform: translateY(-4px) scale(1.03); opacity:1 }
+  100%{ transform: translateY(0) scale(1) }
+}
+@keyframes rankGlow{
+  0%  { box-shadow: 0 0 0 rgba(0,188,212,0); }
+  30% { box-shadow: 0 0 22px rgba(0,188,212,.55); }
+  100%{ box-shadow: 0 0 0 rgba(0,188,212,0); }
+}
+
+/* อันดับดีขึ้น */
+.rank-up{
+  animation: rankUp .6s ease-out;
+}
+@keyframes rankUp{
+  0%  { transform: translateX(-8px); }
+  50% { transform: translateX(4px);  }
+  100%{ transform: translateX(0);    }
+}
+
+/* (ออปชัน) แสดงลูกศรขึ้นเล็ก ๆ ด้านซ้ายเมื่อ rank-up */
+.rank-up::before{
+  content: "↑";
+  position: absolute; left: -18px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; color: #66ff9a; text-shadow: 0 0 8px rgba(102,255,154,.8);
 }
