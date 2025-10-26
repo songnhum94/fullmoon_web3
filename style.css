@@ -366,3 +366,22 @@ body{
   position: absolute; left: -18px; top: 50%; transform: translateY(-50%);
   font-size: 12px; color: #66ff9a; text-shadow: 0 0 8px rgba(102,255,154,.8);
 }
+
+/* ปรับตำแหน่งกระทงให้เหมาะกับจอเล็ก */
+@media (max-width: 768px) {
+  #river-simulation {
+    aspect-ratio: auto;
+    height: 260px; /* กำหนดความสูงชัดเจนบนมือถือ */
+  }
+
+  .krathong-2d {
+    width: 60px; /* ย่อขนาดกระทงลง */
+    z-index: 12; /* ให้ลอยอยู่หน้าวิดีโอ */
+    top: auto;
+    bottom: 15%; /* ลอยขึ้นมาจากขอบล่าง */
+  }
+
+  .river-foreground {
+    z-index: 11; /* วางอยู่หลัง .krathong-2d */
+  }
+}

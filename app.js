@@ -1,51 +1,120 @@
 /* ===========================
- * ส่วน Web3/UI
+ * Full Moon Loy Krathong - App.js
+ * ปรับปรุง: Audio hardening (MetaMask/iOS), ผูก gesture จริง, โครง Wallet/Ranking/UI
  * =========================== */
 document.addEventListener('DOMContentLoaded', async () => {
-  const connectWalletBtn = document.getElementById('connect-wallet-btn');
-  const buyButtons = document.querySelectorAll('.buy-btn');
-  const donateBtn = document.getElementById('donate-btn');
-  let currentWalletAddress = null;
-  let ethers;
+  /* ---------------------------
+   * อ้างอิง DOM หลัก
+   * --------------------------- */
+  const connectWalletBtn = document.getElementById('connect-wallet-btn');     // :contentReference[oaicite:0]{index=0}
+  const buyButtons       = document.querySelectorAll('.buy-btn');             // :contentReference[oaicite:1]{index=1}
+  const donateBtn        = document.getElementById('donate-btn');             // :contentReference[oaicite:2]{index=2}
+  const floatCountEl     = document.getElementById('float-count');            // :contentReference[oaicite:3]{index=3}
+  const riverContainer   = document.getElementById('river-simulation');       // :contentReference[oaicite:4]{index=4}
+  const riverVideo       = document.querySelector('.river-video-bg');         // :contentReference[oaicite:5]{index=5}
+  const bgMusic          = document.getElementById('bg-music');               // :contentReference[oaicite:6]{index=6}
 
-  const floatCountElement = document.getElementById('float-count');
+  // Modal ใส่คำอธิษฐาน
+  const wishModal        = document.getElementById('wish-modal');             // :contentReference[oaicite:7]{index=7}
+  const wishInput        = document.getElementById('wish-input');             // :contentReference[oaicite:8]{index=8}
+  const cancelWishBtn    = document.getElementById('cancel-wish-btn');        // :contentReference[oaicite:9]{index=9}
+  const submitWishBtn    = document.getElementById('submit-wish-btn');        // :contentReference[oaicite:10]{index=10}
+
+  /* ---------------------------
+   * ค่าพื้นฐาน/สถานะ
+   * --------------------------- */
+  const ASSETS_BASE = './assets/';
+  let   ethers;
+  let   currentWalletAddress = null;
+
+  // ตัวนับกระทง (เดโม่ ฝั่งหน้าเว็บ)
   let krathongCount = 1234;
+  if (floatCountEl) floatCountEl.textContent = krathongCount.toLocaleString();
 
-  if (floatCountElement) {
-    floatCountElement.textContent = krathongCount.toLocaleString();
+  // ปรับเสียงสื่อเริ่มต้น
+  if (riverVideo) riverVideo.volume = 0.15;
+  if (bgMusic)   bgMusic.volume    = 0.07;
+
+  /* ===========================
+   * 1) Audio Hardening (แก้เพลงดับบน MetaMask/iOS)
+   * =========================== */
+  const userAudio = { enabled: false };
+  let audioCtx, mediaNode;
+
+  function enableSound() {
+    try {
+      if (!bgMusic) return;
+      userAudio.enabled = true;
+
+      // สร้าง/ปลุก WebAudio
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      // ผูก <audio> เข้า WebAudio สักครั้ง
+      if (!mediaNode) {
+        mediaNode = audioCtx.createMediaElementSource(bgMusic);
+        mediaNode.connect(audioCtx.destination);
+      }
+
+      // ปลด mute + เล่นซ้ำ
+      bgMusic.muted = false;
+      bgMusic.loop  = true;
+      bgMusic.play().catch(() => { /* เงียบไว้ */ });
+
+      // ปลดเสียงวิดีโอด้วย (ถ้ามี)
+      if (riverVideo && riverVideo.muted) {
+        riverVideo.muted = false;
+        riverVideo.play().catch(() => {});
+      }
+    } catch (e) {
+      console.warn('Audio init fail', e);
+    }
   }
 
-  // โหลด Ethers
+  // Auto-resume เมื่อสลับหน้าจอ/กลับมาโฟกัส
+  ['visibilitychange', 'pageshow'].forEach(ev => {
+    document.addEventListener(ev, () => {
+      if (!userAudio.enabled) return;
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      if (bgMusic && bgMusic.paused && document.visibilityState === 'visible') {
+        bgMusic.play().catch(() => {});
+      }
+    });
+  });
+
+  // ถ้าโดน pause เอง ทั้งที่ยังแอคทีฟ ให้เด้งกลับ (ไม่รบกวนถ้าผู้ใช้กดหยุดเอง)
+  bgMusic?.addEventListener('pause', () => {
+    if (userAudio.enabled && document.visibilityState === 'visible' && bgMusic.paused) {
+      bgMusic.play().catch(() => {});
+    }
+  });
+
+  /* ===========================
+   * 2) Wallet (Ethers + MetaMask)
+   * =========================== */
   try {
     const ethersModule = await import('https://unpkg.com/ethers@5.7.2/dist/ethers.esm.js');
     ethers = ethersModule.ethers;
   } catch (e) {
-    if (connectWalletBtn) {
-        connectWalletBtn.textContent = '❌ Ethers Error';
-        connectWalletBtn.style.backgroundColor = '#d82d2d';
-    }
-    return;
+    connectWalletBtn && (connectWalletBtn.textContent = '❌ Ethers Error');
+    connectWalletBtn && (connectWalletBtn.style.backgroundColor = '#d82d2d');
   }
 
-  if (typeof window.ethereum === 'undefined') {
-    if (connectWalletBtn) {
-        connectWalletBtn.textContent = '🦊 Install MetaMask';
-        connectWalletBtn.style.backgroundColor = '#f76707';
-    }
-    // Don't return here, allow the rest of the UI to load
+  function mask(addr) {
+    if (!addr) return '';
+    return addr.slice(0, 6) + '...' + addr.slice(-4);
   }
 
-  // (ฟังก์ชัน Wallet ... )
   function updateWalletStatus(addr) {
     currentWalletAddress = addr;
-    const s = addr.slice(0, 6) + '...' + addr.slice(-4);
     if (connectWalletBtn) {
-        connectWalletBtn.textContent = `🔌 ยกเลิกการเชื่อมต่อ (${s})`;
-        connectWalletBtn.style.backgroundColor = '#00c853';
+      connectWalletBtn.textContent = `🔌 ยกเลิกการเชื่อมต่อ (${mask(addr)})`;
+      connectWalletBtn.style.backgroundColor = '#00c853';
     }
-    ensureUserInRanking(addr); // Make sure user exists in ranking
-    renderRankingList(); // Update ranking display
+    ensureUserInRanking(addr);
+    renderRankingList();
   }
+
   function resetWalletStatus() {
     currentWalletAddress = null;
     if (connectWalletBtn) {
@@ -53,86 +122,63 @@ document.addEventListener('DOMContentLoaded', async () => {
       connectWalletBtn.style.backgroundColor = '#2962ff';
     }
   }
+
   async function connectWallet() {
-     if (typeof window.ethereum === 'undefined') {
-        alert('โปรดติดตั้ง MetaMask!');
-        return;
+    if (typeof window.ethereum === 'undefined') {
+      alert('โปรดติดตั้ง MetaMask!');
+      return;
     }
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const accounts = await provider.send('eth_requestAccounts', []);
       updateWalletStatus(accounts[0]);
-    } catch (e) { if (e?.code === 4001) alert('ผู้ใช้ปฏิเสธการเชื่อมต่อ'); resetWalletStatus(); }
+    } catch (e) {
+      if (e?.code === 4001) alert('ผู้ใช้ปฏิเสธการเชื่อมต่อ');
+      resetWalletStatus();
+    }
   }
+
   async function disconnectWallet() {
-    try { await window.ethereum?.request?.({ method: 'wallet_revokePermissions', params: [{ eth_accounts: {} }] }); } catch {}
+    try {
+      await window.ethereum?.request?.({
+        method: 'wallet_revokePermissions',
+        params: [{ eth_accounts: {} }]
+      });
+    } catch {}
     resetWalletStatus();
   }
+
+  // ปุ่มเชื่อมต่อ = ใช้เป็น "gesture จริง" เพื่อเรียก enableSound()
   connectWalletBtn?.addEventListener('click', async () => {
-    if (currentWalletAddress) await disconnectWallet(); else await connectWallet();
+    enableSound(); // สำคัญ: ผูกเสียงกับปุ่มจริง
+    if (currentWalletAddress) await disconnectWallet();
+    else await connectWallet();
   });
-  resetWalletStatus(); // Set initial state
-  // Try to connect automatically if already permitted
-  if (typeof window.ethereum !== 'undefined') {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const accounts = await provider.listAccounts();
-        if (accounts.length) updateWalletStatus(accounts[0]);
-      } catch (e) { console.warn("Could not retrieve accounts on load:", e); }
+
+  // เริ่มต้น
+  resetWalletStatus();
+  if (typeof window.ethereum !== 'undefined' && ethers) {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const accounts = await provider.listAccounts();
+      if (accounts.length) updateWalletStatus(accounts[0]);
+    } catch (e) {
+      console.warn('Could not retrieve accounts on load:', e);
+    }
   }
-  window.ethereum?.on('accountsChanged', (acc) => { acc.length ? updateWalletStatus(acc[0]) : resetWalletStatus(); });
+  window.ethereum?.on('accountsChanged', (acc) => {
+    acc.length ? updateWalletStatus(acc[0]) : resetWalletStatus();
+  });
   window.ethereum?.on('chainChanged', () => resetWalletStatus());
 
-
   /* ===========================
-   * ส่วนกระทง 2D และ Media (Video + Audio)
+   * 3) กระทง 2D + สปอน/ทูลทิป
    * =========================== */
-
-  const riverContainer = document.getElementById('river-simulation');
-  const riverVideo     = document.querySelector('.river-video-bg');
-  const bgMusic        = document.getElementById('bg-music');
-  const ASSETS_BASE    = './assets/'; // Define base path for assets
-
-  if (riverVideo) riverVideo.volume = 0.15; // เสียงวิดีโอ
-  if (bgMusic)    bgMusic.volume    = 0.07; // เสียงเพลง
-
-  function unmuteMediaOnFirstClick() {
-    let videoPromise = Promise.resolve();
-    let audioPromise = Promise.resolve();
-
-    console.log("First click detected. Attempting to unmute...");
-
-    if (riverVideo && riverVideo.muted) {
-      riverVideo.muted = false;
-      videoPromise = riverVideo.play().then(() => {
-        console.log("Video unmuted and playing.");
-      }).catch((error) => {
-        console.warn("Video play() failed (might be expected):", error);
-      });
-    }
-
-    if (bgMusic && bgMusic.muted) {
-      bgMusic.muted = false;
-      audioPromise = bgMusic.play().then(() => {
-        console.log("Audio unmuted and playing.");
-      }).catch((error) => {
-        console.warn("Audio play() failed (might be expected):", error);
-      });
-    }
-
-    Promise.allSettled([videoPromise, audioPromise]).then(() => {
-         console.log("Removing unmute listener.");
-         document.body.removeEventListener('click', unmuteMediaOnFirstClick);
-    });
-  }
-  document.body.addEventListener('click', unmuteMediaOnFirstClick);
-
   function imgPathByTier(tier) {
-    const t = Math.min(Math.max(Number(tier)||1, 1), 5);
+    const t = Math.min(Math.max(Number(tier) || 1, 1), 5);
     return `${ASSETS_BASE}${t}.png`;
   }
 
-  // 3. สร้างกระทง
   function spawnKrathong(tier, wishText) {
     if (!riverContainer) return;
 
@@ -151,341 +197,198 @@ document.addEventListener('DOMContentLoaded', async () => {
     wrap.appendChild(img);
 
     const riverH = riverContainer.clientHeight;
-
     if (riverH === 0) {
-        console.error("Bug detected: River height is 0. Spawning at 65%.");
-        wrap.style.setProperty('--krathong-start-y', `65%`);
+      // กันเคส container ยังไม่คำนวณ layout
+      wrap.style.setProperty('--krathong-start-y', `65%`);
     } else {
-        const startPct = 0.55, endPct = 0.70; // ลอยสูงขึ้น
-        const zone = riverH * (endPct - startPct);
-        const startY = riverH * startPct;
-        const y = (Math.random() * zone) + startY;
-        wrap.style.setProperty('--krathong-start-y', `${y}px`);
+      const startPct = 0.55, endPct = 0.70; // โซนลอย
+      const zone = riverH * (endPct - startPct);
+      const startY = riverH * startPct;
+      const y = (Math.random() * zone) + startY;
+      wrap.style.setProperty('--krathong-start-y', `${y}px`);
     }
 
-    wrap.style.animationDuration = `${25 + Math.random() * 15}s`; // ลอยช้า
+    // ความเร็วลอยสุ่มเล็กน้อย
+    wrap.style.animationDuration = `${25 + Math.random() * 15}s`;
     riverContainer.appendChild(wrap);
   }
 
   /* ===========================
-   * === ส่วน Pop-up (Modal) Logic ===
+   * 4) Ranking (เก็บ localStorage เดโม่)
    * =========================== */
+  const R_KEY = 'fm_ranking_v1';
 
-  const wishModal     = document.getElementById('wish-modal');
-  const wishInput     = document.getElementById('wish-input');
-  const submitWishBtn = document.getElementById('submit-wish-btn');
-  const cancelWishBtn = document.getElementById('cancel-wish-btn');
-
-  let pendingKrathongTier  = null;
-  let pendingKrathongPrice = 0;
-  let pendingDonationAmount= 0;
-
-  function closeModal() {
-    if (wishInput) wishInput.value = '';
-    if (wishModal) wishModal.classList.add('hidden');
-    pendingKrathongTier  = null;
-    pendingKrathongPrice = 0;
-    pendingDonationAmount= 0;
+  function getRanking() {
+    try {
+      return JSON.parse(localStorage.getItem(R_KEY) || '[]');
+    } catch { return []; }
   }
 
-  buyButtons.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      if (!currentWalletAddress) { alert('โปรดเชื่อมต่อ Wallet ก่อนทำการลอยกระทง'); return; }
-      const card  = e.target.closest('.krathong-card');
-      if (!card) return;
-      const tier  = card.dataset.level;
-      const price = Number(card.dataset.price || 0);
-
-      pendingKrathongTier  = tier;
-      pendingKrathongPrice = price;
-      pendingDonationAmount= 0;
-
-      if (wishModal) wishModal.classList.remove('hidden');
-      if (wishInput) wishInput.focus();
-    });
-  });
-
-  cancelWishBtn?.addEventListener('click', closeModal);
-
-  donateBtn?.addEventListener('click', () => {
-    if (!currentWalletAddress) { alert('โปรดเชื่อมต่อ Wallet ก่อนทำการบริจาค'); return; }
-    const amountInput = document.getElementById('donation-amount');
-    const amount = Number(amountInput?.value || 0);
-    if (amount <= 0) { alert('โปรดระบุจำนวน FM ที่ต้องการบริจาค'); return; }
-
-    pendingDonationAmount = amount;
-    pendingKrathongTier   = null;
-    pendingKrathongPrice  = 0;
-
-    if (wishModal) wishModal.classList.remove('hidden');
-    if (wishInput) wishInput.focus();
-  });
-
-  submitWishBtn?.addEventListener('click', () => {
-    const wishText  = wishInput ? wishInput.value.trim() : '';
-    // === ส่วนที่แก้ไข (แก้บั๊ก finalWish) ===
-    const finalWish = wishText === '' ? 'ขอให้มีความสุข' : wishText; // ใช้ wishText ไม่ใช่ finalWish
-    // === จบส่วนที่แก้ไข ===
-
-    let tierToSpawn = null;
-    let amountForRank = 0;
-
-    if (pendingDonationAmount > 0) {
-      tierToSpawn = Math.floor(Math.random() * 5) + 1;
-      amountForRank = pendingDonationAmount;
-      alert(`เดโมธุรกรรม: บริจาค ${pendingDonationAmount} FM`);
-    } else if (pendingKrathongTier) {
-      tierToSpawn = pendingKrathongTier;
-      amountForRank = pendingKrathongPrice;
-    } else return closeModal();
-
-    if (tierToSpawn !== null) {
-        spawnKrathong(tierToSpawn, finalWish);
-        addToRankingWithLast(currentWalletAddress, amountForRank, tierToSpawn, finalWish);
-
-        krathongCount++;
-        if (floatCountElement) floatCountElement.textContent = krathongCount.toLocaleString();
-    }
-    closeModal();
-  });
-
-  /* ===========================
-   * Ranking (LocalStorage)
-   * =========================== */
-  const RANK_KEY = 'fm_ranking_demo_v3';
-  let rankings = [];
-   try {
-       rankings = JSON.parse(localStorage.getItem(RANK_KEY) || '[]');
-       if (!Array.isArray(rankings)) rankings = [];
-   } catch (e) {
-       console.error("Failed to parse rankings from localStorage:", e);
-       rankings = [];
-   }
-
-  function saveRankings() {
-    try {
-        localStorage.setItem(RANK_KEY, JSON.stringify(rankings));
-    } catch (e) {
-        console.error("Failed to save rankings to localStorage:", e);
-    }
+  function setRanking(data) {
+    localStorage.setItem(R_KEY, JSON.stringify(data));
   }
 
   function ensureUserInRanking(addr) {
     if (!addr) return;
-    const addrLower = addr.toLowerCase();
-    if (!rankings.some(r => r.address.toLowerCase() === addrLower)) {
-      rankings.push({ address: addr, total: 0, last: null });
+    const arr = getRanking();
+    const i = arr.findIndex(x => x.address.toLowerCase() === addr.toLowerCase());
+    if (i === -1) {
+      arr.push({ address: addr, total: 0, last: null });
+      setRanking(arr);
     }
   }
 
-  function addToRankingWithLast(addr, amountFM, tier, wish) {
-    if (!addr || !amountFM) return;
-    const addrLower = addr.toLowerCase();
-    ensureUserInRanking(addr);
-    const rec = rankings.find(r => r.address.toLowerCase() === addrLower);
-    if (rec) {
-        rec.total += Number(amountFM);
-        rec.last = { tier: Number(tier), wish: wish || 'ขอให้มีความสุข', ts: Date.now() };
-        rankings.sort((a,b)=> b.total - a.total);
-        saveRankings();
-        renderRankingList();
+  function addContribution(addr, amount, tier, wish) {
+    const arr = getRanking();
+    const i = arr.findIndex(x => x.address.toLowerCase() === addr.toLowerCase());
+    if (i !== -1) {
+      arr[i].total += Number(amount) || 0;
+      arr[i].last = { tier, wish, at: Date.now() };
     } else {
-        console.error("Could not find user record after ensureUserInRanking:", addr);
+      arr.push({ address: addr, total: Number(amount) || 0, last: { tier, wish, at: Date.now() } });
     }
+    // จัดอันดับมาก→น้อย
+    arr.sort((a, b) => (b.total || 0) - (a.total || 0));
+    setRanking(arr);
+    renderRankingList();
   }
-
-  function mask(addr){ return addr ? addr.slice(0,6)+'...'+addr.slice(-4) : '???'; }
-
-  let prevRankIndex = {};
 
   function renderRankingList() {
-    const list = document.getElementById('ranking-list');
+    const list = document.getElementById('ranking-list'); // :contentReference[oaicite:11]{index=11}
     if (!list) return;
 
-    const oldIndexMap = { ...prevRankIndex };
-    list.innerHTML = '';
-    const top5 = rankings.slice(0,5);
-    const newIndexMap = {};
+    const arr = getRanking();
+    const top = Array.from({ length: 5 }).map((_, i) => arr[i] || null);
 
-    for (let i=0; i<5; i++) {
-      const item = top5[i];
+    list.innerHTML = '';
+    top.forEach((item, i) => {
       const p = document.createElement('p');
       p.className = 'rank-item';
-
-      if (item && item.address) {
-        const medal = i===0?'✨':i===1?'💫':i===2?'🌟':'🕯️';
-        p.textContent = `${i+1}. ${medal} ${mask(item.address)} (${item.total} FM)`;
-        const addrLower = item.address.toLowerCase();
-        p.dataset.address = addrLower;
+      if (item) {
+        const medal = i === 0 ? '✨' : i === 1 ? '💫' : i === 2 ? '🌟' : '🕯️';
+        p.textContent = `${i + 1}. ${medal} ${mask(item.address)} (${item.total} FM)`;
+        p.dataset.address = item.address.toLowerCase();
         p.dataset.level   = item?.last?.tier ?? 1;
         p.dataset.wish    = item?.last?.wish || 'ขอให้มีความสุข';
-
-        newIndexMap[addrLower] = i;
-
-        if (!(addrLower in oldIndexMap)) {
-          p.classList.add('rank-enter');
-        } else if (oldIndexMap[addrLower] > i) {
-          p.classList.add('rank-up');
-        }
       } else {
-        p.textContent = `${i+1}. –––––––––––––––––`;
+        p.textContent = `${i + 1}. –––––––––––––––––`;
         p.style.opacity = 0.4;
-        p.dataset.level = "";
-        p.dataset.wish  = "";
       }
       list.appendChild(p);
-    }
+    });
 
-    prevRankIndex = newIndexMap;
     attachRankPreviewHandlers();
-
-    setTimeout(() => {
-      list.querySelectorAll('.rank-enter, .rank-up')
-          .forEach(el => el.classList.remove('rank-enter','rank-up'));
-    }, 1200);
   }
 
   function attachRankPreviewHandlers() {
     const rankItems = document.querySelectorAll('#ranking-list .rank-item');
     let preview = document.getElementById('rank-preview');
     if (!preview) {
-        preview = document.createElement('div');
-        preview.id = 'rank-preview';
-        // Add necessary styles...
-        preview.style.position = 'fixed';
-        preview.style.display = 'none';
-        preview.style.pointerEvents = 'none';
-        preview.style.zIndex = '3000';
-        preview.style.transform = 'translate(12px, 12px)';
-        preview.style.padding = '8px';
-        preview.style.borderRadius = '10px';
-        preview.style.background = 'rgba(0,0,0,0.7)';
-        preview.style.border = '1px solid var(--neon-blue)';
-        preview.style.boxShadow = '0 4px 12px rgba(0,0,0,.3)';
-        preview.innerHTML = `
-            <div id="rank-preview-wish"
-                 style="margin-bottom:6px;
-                        max-width:180px;
-                        font-size:.9rem;
-                        line-height:1.3;
-                        color:#fff;
-                        text-align:center;
-                        font-weight:normal;
-                        text-shadow: none;">
-            </div>
-            <img alt="krathong preview"
-                 style="width:90px;
-                        display:block;
-                        margin:auto;
-                        border-radius:6px;">
-        `;
-        document.body.appendChild(preview);
+      preview = document.createElement('div');
+      preview.id = 'rank-preview';
+      preview.style.position = 'fixed';
+      preview.style.display = 'none';
+      preview.style.pointerEvents = 'none';
+      preview.style.zIndex = '3000';
+      preview.style.transform = 'translate(12px, 12px)';
+      preview.style.padding = '8px';
+      preview.style.borderRadius = '10px';
+      preview.style.background = 'rgba(0,0,0,0.7)';
+      preview.style.border = '1px solid var(--neon-blue)';
+      preview.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+      preview.innerHTML = `
+        <div id="rank-preview-wish" style="margin-bottom:6px;max-width:180px;font-size:.9rem;line-height:1.3;color:#fff;text-align:center;"></div>
+        <img alt="krathong preview" style="width:90px;display:block;margin:auto;border-radius:6px;">
+      `;
+      document.body.appendChild(preview);
     }
-
 
     const previewImg  = preview.querySelector('img');
     const previewWish = preview.querySelector('#rank-preview-wish');
     const PAD = 16, BOX_W = 200, BOX_H = 150;
 
     rankItems.forEach(el => {
-      el.removeEventListener('mouseenter', el._rankMouseEnter);
-      el.removeEventListener('mousemove', el._rankMouseMove);
-      el.removeEventListener('mouseleave', el._rankMouseLeave);
-      el.removeEventListener('click', el._rankMouseClick);
-
-      const level = Number(el.dataset.level || 0);
-      const wish  = el.dataset.wish || '';
-      const imgPath = level ? imgPathByTier(level) : '';
-
-      el._rankMouseEnter = () => {
-        if (!level || !preview || !previewImg || !previewWish) return;
-        previewImg.src = imgPath;
+      el.onmouseenter = (e) => {
+        const level = Number(el.dataset.level || 1);
+        const wish  = el.dataset.wish || '';
+        previewImg.src = imgPathByTier(level);
         previewWish.textContent = wish;
         preview.style.display = 'block';
       };
-
-      el._rankMouseMove = e => {
-         if (!level || !preview) return;
+      el.onmousemove = (e) => {
         let x = e.clientX + PAD, y = e.clientY + PAD;
-        if (x + BOX_W > window.innerWidth)  x = e.clientX - BOX_W - PAD;
-        if (y + BOX_H > window.innerHeight) y = e.clientY - BOX_H - PAD;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        if (x + BOX_W > vw) x = e.clientX - BOX_W - PAD;
+        if (y + BOX_H > vh) y = e.clientY - BOX_H - PAD;
         preview.style.left = `${x}px`;
         preview.style.top  = `${y}px`;
       };
-
-      el._rankMouseLeave = () => { if (preview) preview.style.display = 'none'; };
-
-      el._rankMouseClick = (e) => {
-        if (!level || window.innerWidth > 992 || !preview || !previewImg || !previewWish) return;
-        previewImg.src = imgPath;
-        previewWish.textContent = wish;
-        preview.style.display = 'block';
-        const touchX = e.touches ? e.touches[0].clientX : e.clientX;
-        const touchY = e.touches ? e.touches[0].clientY : e.clientY;
-        preview.style.left = `${(touchX || window.innerWidth / 2) - BOX_W / 2}px`;
-        preview.style.top  = `${(touchY || window.innerHeight / 2) - BOX_H - PAD * 2}px`;
-        let hideTimeout = setTimeout(() => {
-            if (preview) preview.style.display = 'none';
-        }, 2500);
-        preview.ontouchstart = () => clearTimeout(hideTimeout);
-      };
-
-      el.addEventListener('mouseenter', el._rankMouseEnter);
-      el.addEventListener('mousemove', el._rankMouseMove);
-      el.addEventListener('mouseleave', el._rankMouseLeave);
-      el.addEventListener('click', el._rankMouseClick);
+      el.onmouseleave = () => { preview.style.display = 'none'; };
+      el.onclick = () => { preview.style.display = 'none'; };
     });
   }
 
-  // Render ครั้งแรก
+  /* ===========================
+   * 5) Modal Flow (ซื้อ/ลอย/บริจาค)
+   * =========================== */
+  let pendingTier = null;
+  let pendingPrice = null;
+
+  function openWishModal(tier, price) {
+    pendingTier = tier;
+    pendingPrice = price;
+    if (wishInput) wishInput.value = '';
+    wishModal?.classList.remove('hidden');
+  }
+  function closeWishModal() {
+    wishModal?.classList.add('hidden');
+    pendingTier = null; pendingPrice = null;
+  }
+
+  buyButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.krathong-card');
+      const tier  = Number(card?.dataset.level || 1);
+      const price = Number(card?.dataset.price || 0);
+      openWishModal(tier, price);
+    });
+  });
+
+  cancelWishBtn?.addEventListener('click', closeWishModal);
+
+  submitWishBtn?.addEventListener('click', async () => {
+    const wish = (wishInput?.value || 'ขอให้มีความสุข').trim();
+    const tier = pendingTier || 1;
+    const price = pendingPrice || 0;
+
+    // TODO: เชื่อมสัญญาจริงที่นี่ (write tx) แล้วค่อย success
+    spawnKrathong(tier, wish);
+    krathongCount += 1;
+    if (floatCountEl) floatCountEl.textContent = krathongCount.toLocaleString();
+
+    if (currentWalletAddress) addContribution(currentWalletAddress, price, tier, wish);
+    closeWishModal();
+  });
+
+  donateBtn?.addEventListener('click', () => {
+    const amountEl = document.getElementById('donation-amount');
+    const amount = Number(amountEl?.value || 0);
+    if (!amount || amount <= 0) return;
+
+    // TODO: เชื่อมสัญญาจริง (donate)
+    krathongCount += 1;
+    if (floatCountEl) floatCountEl.textContent = krathongCount.toLocaleString();
+
+    if (currentWalletAddress) addContribution(currentWalletAddress, amount, 1, 'ร่วมบุญ');
+    amountEl.value = '';
+  });
+
+  // แรนก์เริ่มต้น
   renderRankingList();
 
   /* ===========================
-   * (ออปชัน) Demo auto-spawn
+   * 6) หมายเหตุ: ตัด body click-unmute เดิมทิ้ง
+   *    (เราใช้ enableSound() ผูกกับปุ่มจริงแทน)
+   *    โค้ดนี้จงใจ "ไม่" ใส่ document.body.addEventListener('click', ...)
    * =========================== */
-  function spawnAndCount(tier, text, delay) {
-    setTimeout(() => {
-      spawnKrathong(tier, text);
-      krathongCount++;
-      if (floatCountElement) floatCountElement.textContent = krathongCount.toLocaleString();
-    }, delay);
-  }
-  function runSampleKrathongs() {
-    if (riverContainer && riverContainer.clientHeight > 0) {
-        spawnAndCount(1, 'กระทงทดสอบ 1', 1000);
-        spawnAndCount(2, 'กระทงทดสอบ 2', 3000);
-        spawnAndCount(3, 'กระทงทดสอบ 3', 6000);
-    } else {
-        console.warn("River container height 0 on initial load, delaying sample spawn.");
-        setTimeout(() => {
-             if (riverContainer && riverContainer.clientHeight > 0) {
-                 runSampleKrathongs();
-             } else {
-                 console.error("River container height still 0 after delay. Samples not spawned.");
-             }
-        }, 500);
-    }
-  }
-
-  // Wait for video metadata OR error before running samples
-  if (riverVideo) {
-    let samplesRun = false;
-    const runSamplesOnce = () => {
-        if (!samplesRun) {
-            runSampleKrathongs();
-            samplesRun = true;
-        }
-    };
-    riverVideo.addEventListener('loadedmetadata', runSamplesOnce);
-    riverVideo.addEventListener('error', runSamplesOnce);
-    setTimeout(() => {
-        if (!samplesRun) {
-            console.warn("Video metadata timeout. Running samples anyway.");
-            runSamplesOnce();
-        }
-    }, 5000); // 5 second timeout
-
-  } else {
-    runSampleKrathongs(); // Run immediately if no video
-  }
 });
