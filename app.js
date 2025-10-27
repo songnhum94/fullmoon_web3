@@ -303,15 +303,15 @@ document.addEventListener('DOMContentLoaded', async () => {
    * =========================== */
   const R_KEY = 'fm_ranking_v1';
   // *** URL ของ Google Apps Script ที่ Deploy ไว้ (อัปเดตแล้ว) ***
-  const RANKING_API_URL = 'https://script.google.com/macros/s/AKfycbzynPwkoLkWI2_dcGeFvingXqtuWCTW50iY4lfDnGab-Plty8SE92FF9lWfDDKkIQJ4tg/exec'; 
+  const RANKING_API_URL = 'https://script.google.com/macros/s/AKfycbxNL-LH6eAtDCGYmzypsDNQ1TreQsREcHrnc6kT84RgqG3nqeKV8bPU1s9DDe0uS8NUgw/exec';
 
 
   async function getRanking() {
     const cacheBuster = Date.now();
     const fetchUrl = `${RANKING_API_URL}?cachebust=${cacheBuster}`;
 
-    if (RANKING_API_URL === 'https://script.google.com/macros/s/AKfycbzfXy1YY022DPpaDBLRrjCAG50P-t5GzG4Vhp6PX-8wHpNyji-uHor028nNmieFP3rRNw/exec') {
-      console.warn("'https://script.google.com/macros/s/AKfycbzfXy1YY022DPpaDBLRrjCAG50P-t5GzG4Vhp6PX-8wHpNyji-uHor028nNmieFP3rRNw/exec'");
+    if (RANKING_API_URL === 'https://script.google.com/macros/s/AKfycbxNL-LH6eAtDCGYmzypsDNQ1TreQsREcHrnc6kT84RgqG3nqeKV8bPU1s9DDe0uS8NUgw/exec') {
+      console.warn("https://script.google.com/macros/s/AKfycbxNL-LH6eAtDCGYmzypsDNQ1TreQsREcHrnc6kT84RgqG3nqeKV8bPU1s9DDe0uS8NUgw/exec");
       try {
         return JSON.parse(localStorage.getItem(R_KEY) || '[]');
       } catch { return []; }
