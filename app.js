@@ -1,24 +1,24 @@
 /* ===========================
  * Full Moon Loy Krathong - App.js
- * ปรับปรุง: Audio hardening (MetaMask/iOS), ผูก gesture จริง, โครง Wallet/Ranking/UI
+ * V2.6: แก้ไข: FINAL URL UPDATE
  * =========================== */
 document.addEventListener('DOMContentLoaded', async () => {
   /* ---------------------------
    * อ้างอิง DOM หลัก
    * --------------------------- */
-  const connectWalletBtn = document.getElementById('connect-wallet-btn');     // :contentReference[oaicite:0]{index=0}
-  const buyButtons       = document.querySelectorAll('.buy-btn');             // :contentReference[oaicite:1]{index=1}
-  const donateBtn        = document.getElementById('donate-btn');             // :contentReference[oaicite:2]{index=2}
-  const floatCountEl     = document.getElementById('float-count');            // :contentReference[oaicite:3]{index=3}
-  const riverContainer   = document.getElementById('river-simulation');       // :contentReference[oaicite:4]{index=4}
-  const riverVideo       = document.querySelector('.river-video-bg');         // :contentReference[oaicite:5]{index=5}
-  const bgMusic          = document.getElementById('bg-music');               // :contentReference[oaicite:6]{index=6}
+  const connectWalletBtn = document.getElementById('connect-wallet-btn');
+  const buyButtons       = document.querySelectorAll('.buy-btn');
+  const donateBtn        = document.getElementById('donate-btn');
+  const floatCountEl     = document.getElementById('float-count');
+  const riverContainer   = document.getElementById('river-simulation');
+  const riverVideo       = document.querySelector('.river-video-bg');
+  const bgMusic          = document.getElementById('bg-music');
 
   // Modal ใส่คำอธิษฐาน
-  const wishModal        = document.getElementById('wish-modal');             // :contentReference[oaicite:7]{index=7}
-  const wishInput        = document.getElementById('wish-input');             // :contentReference[oaicite:8]{index=8}
-  const cancelWishBtn    = document.getElementById('cancel-wish-btn');        // :contentReference[oaicite:9]{index=9}
-  const submitWishBtn    = document.getElementById('submit-wish-btn');        // :contentReference[oaicite:10]{index=10}
+  const wishModal        = document.getElementById('wish-modal');
+  const wishInput        = document.getElementById('wish-input');
+  const cancelWishBtn    = document.getElementById('cancel-wish-btn');
+  const submitWishBtn    = document.getElementById('submit-wish-btn');
 
   /* ---------------------------
    * ค่าพื้นฐาน/สถานะ
@@ -105,24 +105,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return addr.slice(0, 6) + '...' + addr.slice(-4);
   }
 
-  function updateWalletStatus(addr) {
-    currentWalletAddress = addr;
-    if (connectWalletBtn) {
-      connectWalletBtn.textContent = `🔌 ยกเลิกการเชื่อมต่อ (${mask(addr)})`;
-      connectWalletBtn.style.backgroundColor = '#00c853';
-    }
-    ensureUserInRanking(addr);
-    renderRankingList();
-  }
-
-  function resetWalletStatus() {
-    currentWalletAddress = null;
-    if (connectWalletBtn) {
-      connectWalletBtn.textContent = '🔗 เชื่อมต่อ Wallet';
-      connectWalletBtn.style.backgroundColor = '#2962ff';
-    }
-  }
-
   async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
       alert('โปรดติดตั้ง MetaMask!');
@@ -148,9 +130,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     resetWalletStatus();
   }
 
+  function updateWalletStatus(addr) {
+    currentWalletAddress = addr;
+    if (connectWalletBtn) {
+      connectWalletBtn.textContent = `🔌 ยกเลิกการเชื่อมต่อ (${mask(addr)})`;
+      connectWalletBtn.style.backgroundColor = '#00c853';
+    }
+    renderRankingList();
+  }
+
+  function resetWalletStatus() {
+    currentWalletAddress = null;
+    if (connectWalletBtn) {
+      connectWalletBtn.textContent = '🔗 เชื่อมต่อ Wallet';
+      connectWalletBtn.style.backgroundColor = '#2962ff';
+    }
+    renderRankingList();
+  }
+
   // ปุ่มเชื่อมต่อ = ใช้เป็น "gesture จริง" เพื่อเรียก enableSound()
   connectWalletBtn?.addEventListener('click', async () => {
-    enableSound(); // สำคัญ: ผูกเสียงกับปุ่มจริง
+    enableSound();
     if (currentWalletAddress) await disconnectWallet();
     else await connectWallet();
   });
@@ -213,72 +213,272 @@ document.addEventListener('DOMContentLoaded', async () => {
     riverContainer.appendChild(wrap);
   }
 
+
   /* ===========================
-   * 4) Ranking (เก็บ localStorage เดโม่)
+   * 5) Modal Flow (ซื้อ/ลอย/บริจาค)
+   * =========================== */
+  let pendingTier = null;
+  let pendingPrice = null;
+
+  function openWishModal(tier, price) {
+    pendingTier = tier;
+    pendingPrice = price;
+    if (wishInput) wishInput.value = '';
+    wishModal?.classList.remove('hidden');
+  }
+
+  // NOTE: closeWishModal() ถูกเรียกหลังจาก addContribution สำเร็จ
+  function closeWishModal() {
+    wishModal?.classList.add('hidden');
+    pendingTier = null; pendingPrice = null;
+  }
+
+  buyButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.krathong-card');
+      const tier  = Number(card?.dataset.level || 1);
+      const price = Number(card?.dataset.price || 0);
+      openWishModal(tier, price);
+    });
+  });
+
+  cancelWishBtn?.addEventListener('click', closeWishModal);
+
+  submitWishBtn?.addEventListener('click', async () => {
+    const wish = (wishInput?.value || 'ขอให้มีความสุข').trim();
+    const tier = pendingTier || 1;
+    const price = pendingPrice || 0;
+
+    if (!currentWalletAddress) {
+        alert('❌ โปรดเชื่อมต่อ Wallet ก่อนลอยกระทง');
+        return;
+    }
+    
+    // แสดงผลลัพธ์ทันที (Local Display)
+    spawnKrathong(tier, wish);
+    krathongCount += 1;
+    if (floatCountEl) floatCountEl.textContent = krathongCount.toLocaleString();
+
+    // พยายามบันทึกลง Sheet
+    const success = await addContribution(currentWalletAddress, price, tier, wish);
+    
+    // ปิด Modal หลังการบันทึกข้อมูล
+    closeWishModal(); 
+
+    if (success) {
+        alert('✅ ลอยกระทงสำเร็จและบันทึกข้อมูลแล้ว!');
+    } else {
+        alert('❌ ข้อผิดพลาดในการบันทึกข้อมูล: Failed to fetch (โปรดตรวจสอบ Console และ Apps Script URL)');
+    }
+  });
+
+  donateBtn?.addEventListener('click', async () => {
+    const amountEl = document.getElementById('donation-amount');
+    const amount = Number(amountEl?.value || 0);
+    
+    if (!currentWalletAddress) {
+        alert('❌ โปรดเชื่อมต่อ Wallet ก่อนบริจาค');
+        return;
+    }
+    if (!amount || amount <= 0) return;
+
+    // แสดงผลลัพธ์ทันที (Local Display)
+    krathongCount += 1;
+    if (floatCountEl) floatCountEl.textContent = krathongCount.toLocaleString();
+
+    // พยายามบันทึกลง Sheet
+    const success = await addContribution(currentWalletAddress, amount, 1, 'ร่วมบุญ');
+    amountEl.value = '';
+
+    if (success) {
+        alert('✅ บริจาคสำเร็จและบันทึกข้อมูลแล้ว!');
+    } else {
+        alert('❌ ข้อผิดพลาดในการบันทึกข้อมูล: Failed to fetch (โปรดตรวจสอบ Console และ Apps Script URL)');
+    }
+  });
+
+  /* ===========================
+   * 4) Ranking (เชื่อม Google Sheet API และ Your Rank)
+   * NOTE: บล็อกโค้ดถูกย้ายมาอยู่ส่วนท้ายเพื่อแก้ ReferenceError
    * =========================== */
   const R_KEY = 'fm_ranking_v1';
+  // *** URL ของ Google Apps Script ที่ Deploy ไว้ (อัปเดตแล้ว) ***
+  const RANKING_API_URL = 'https://script.google.com/macros/s/AKfycbzynPwkoLkWI2_dcGeFvingXqtuWCTW50iY4lfDnGab-Plty8SE92FF9lWfDDKkIQJ4tg/exec'; 
 
-  function getRanking() {
+
+  async function getRanking() {
+    const cacheBuster = Date.now();
+    const fetchUrl = `${RANKING_API_URL}?cachebust=${cacheBuster}`;
+
+    if (RANKING_API_URL === 'https://script.google.com/macros/s/AKfycbzfXy1YY022DPpaDBLRrjCAG50P-t5GzG4Vhp6PX-8wHpNyji-uHor028nNmieFP3rRNw/exec') {
+      console.warn("'https://script.google.com/macros/s/AKfycbzfXy1YY022DPpaDBLRrjCAG50P-t5GzG4Vhp6PX-8wHpNyji-uHor028nNmieFP3rRNw/exec'");
+      try {
+        return JSON.parse(localStorage.getItem(R_KEY) || '[]');
+      } catch { return []; }
+    }
+
     try {
-      return JSON.parse(localStorage.getItem(R_KEY) || '[]');
-    } catch { return []; }
-  }
+      const response = await fetch(fetchUrl);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const data = await response.json();
+      
+      // Fallback check: If API returns empty and local storage has data, prefer API data structure.
+      if (data.length === 0 && localStorage.getItem(R_KEY)) {
+           console.warn("API returned empty data. Returning API data structure (empty) to avoid mixing with old local data.");
+           return data;
+      }
+      return data; // ข้อมูลที่เรียงแล้วมาจาก Apps Script
 
-  function setRanking(data) {
-    localStorage.setItem(R_KEY, JSON.stringify(data));
-  }
-
-  function ensureUserInRanking(addr) {
-    if (!addr) return;
-    const arr = getRanking();
-    const i = arr.findIndex(x => x.address.toLowerCase() === addr.toLowerCase());
-    if (i === -1) {
-      arr.push({ address: addr, total: 0, last: null });
-      setRanking(arr);
+    } catch (e) {
+      console.error('Failed to fetch ranking from API:', e);
+      // กรณีดึง API ล้มเหลว ให้กลับไปใช้ข้อมูล localStorage เดิม (Fallback)
+      try {
+        const localData = JSON.parse(localStorage.getItem(R_KEY) || '[]');
+        console.warn('Fallback to local storage data for rendering.');
+        return localData;
+      } catch { 
+        return []; 
+      }
     }
   }
 
-  function addContribution(addr, amount, tier, wish) {
-    const arr = getRanking();
-    const i = arr.findIndex(x => x.address.toLowerCase() === addr.toLowerCase());
-    if (i !== -1) {
-      arr[i].total += Number(amount) || 0;
-      arr[i].last = { tier, wish, at: Date.now() };
-    } else {
-      arr.push({ address: addr, total: Number(amount) || 0, last: { tier, wish, at: Date.now() } });
+  async function addContribution(addr, amount, tier, wish) {
+    const payload = {
+        address: addr,
+        amount: amount,
+        tier: tier,
+        wish: wish
+    };
+    
+    // NOTE: ไม่จำเป็นต้องเช็ค INSERT_YOUR_NEWLY_DEPLOYED_WEB_APP_URL_HERE/exec อีกแล้ว
+    // เพราะค่าถูกแทนที่แล้ว และจะเข้าสู่ try/catch block ทันที
+    
+    try {
+        const response = await fetch(RANKING_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+
+        if (!response.ok || result.status === 'error') {
+            console.error('API POST Error:', result.message || 'Unknown error');
+            // Fallback: หาก API ล้มเหลว ให้บันทึกใน localStorage ชั่วคราว (เพื่อรักษา Your Rank)
+            const arr = await getRanking();
+            const currentList = Array.isArray(arr) ? arr : [];
+            const existingIndex = currentList.findIndex(x => x.address.toLowerCase() === addr.toLowerCase());
+
+            if (existingIndex !== -1) {
+                currentList[existingIndex].total += Number(amount) || 0;
+                currentList[existingIndex].last = { tier, wish, timestamp: Date.now() };
+            } else {
+                currentList.push({ address: addr, total: Number(amount) || 0, last: { tier, wish, timestamp: Date.now() } });
+            }
+            currentList.sort((a, b) => (b.total || 0) - (b.total || 0));
+            localStorage.setItem(R_KEY, JSON.stringify(currentList));
+            renderRankingList();
+            
+            return false;
+        }
+
+        // หากสำเร็จ ให้อัปเดต Ranking List ใหม่
+        renderRankingList();
+        return true;
+        
+    } catch (e) {
+        console.error('Failed to send contribution to Google Sheet:', e);
+        // Fallback: หาก API ล้มเหลว ให้บันทึกใน localStorage ชั่วคราว (เพื่อรักษา Your Rank)
+        const arr = await getRanking();
+        const currentList = Array.isArray(arr) ? arr : [];
+        const existingIndex = currentList.findIndex(x => x.address.toLowerCase() === addr.toLowerCase());
+
+        if (existingIndex !== -1) {
+            currentList[existingIndex].total += Number(amount) || 0;
+            currentList[existingIndex].last = { tier, wish, timestamp: Date.now() };
+        } else {
+            currentList.push({ address: addr, total: Number(amount) || 0, last: { tier, wish, timestamp: Date.now() } });
+        }
+        currentList.sort((a, b) => (b.total || 0) - (b.total || 0));
+        localStorage.setItem(R_KEY, JSON.stringify(currentList));
+        renderRankingList();
+        
+        return false; // แจ้งว่าการบันทึกจริงล้มเหลว
     }
-    // จัดอันดับมาก→น้อย
-    arr.sort((a, b) => (b.total || 0) - (a.total || 0));
-    setRanking(arr);
-    renderRankingList();
   }
 
-  function renderRankingList() {
-    const list = document.getElementById('ranking-list'); // :contentReference[oaicite:11]{index=11}
-    if (!list) return;
 
-    const arr = getRanking();
-    const top = Array.from({ length: 5 }).map((_, i) => arr[i] || null);
-
-    list.innerHTML = '';
-    top.forEach((item, i) => {
-      const p = document.createElement('p');
-      p.className = 'rank-item';
-      if (item) {
-        const medal = i === 0 ? '✨' : i === 1 ? '💫' : i === 2 ? '🌟' : '🕯️';
-        p.textContent = `${i + 1}. ${medal} ${mask(item.address)} (${item.total} FM)`;
+  // ฟังก์ชันช่วยสร้าง Element
+  function createRankElement(item, rank, isUser) {
+    const p = document.createElement('p');
+    p.className = 'rank-item';
+    if (item) {
+        const medal = rank === 1 ? '✨' : rank === 2 ? '💫' : rank === 3 ? '🌟' : '🕯️';
+        p.textContent = `${rank}. ${medal} ${mask(item.address)} (${item.total} FM)`;
         p.dataset.address = item.address.toLowerCase();
         p.dataset.level   = item?.last?.tier ?? 1;
         p.dataset.wish    = item?.last?.wish || 'ขอให้มีความสุข';
-      } else {
-        p.textContent = `${i + 1}. –––––––––––––––––`;
+
+        if (isUser) {
+            p.classList.add('is-user-rank');
+            // แก้ข้อความให้ชัดเจนเมื่อเป็น Your Rank
+            p.textContent = `${rank}. 👤 ${mask(item.address)} (Your Rank! | ${item.total} FM)`; 
+        }
+    } else {
+        p.textContent = `${rank}. –––––––––––––––––`;
         p.style.opacity = 0.4;
-      }
-      list.appendChild(p);
+    }
+    return p;
+  }
+
+  async function renderRankingList() {
+    const list = document.getElementById('ranking-list');
+    if (!list) return;
+
+    // ดึงข้อมูล Ranking
+    const allRanks = await getRanking(); 
+    
+    // 1. กรอง Top 5
+    const top = allRanks.slice(0, 5); 
+    list.innerHTML = '';
+    
+    // 2. แสดง Top 5 ทั้งหมด
+    top.forEach((item, i) => {
+        const rank = i + 1;
+        // ตรวจสอบว่าผู้ใช้ที่เชื่อมต่ออยู่ใน Top 5 หรือไม่
+        const isCurrentUser = item && currentWalletAddress && item.address.toLowerCase() === currentWalletAddress.toLowerCase();
+        
+        const p = createRankElement(item, rank, isCurrentUser);
+        list.appendChild(p);
     });
+
+    // 3. แสดง 'Your Rank' หากไม่อยู่ใน Top 5 และมีการเชื่อมต่อ Wallet
+    if (currentWalletAddress) {
+        const userIndex = allRanks.findIndex(x => x.address.toLowerCase() === currentWalletAddress.toLowerCase());
+        
+        // ถ้าอยู่ใน Ranking และอยู่นอก Top 5
+        if (userIndex !== -1 && userIndex >= 5) {
+            const userRankData = allRanks[userIndex];
+            const userRank = userIndex + 1;
+            
+            // ตัวแบ่ง (ใช้สไตล์จาก style.css)
+            const divider = document.createElement('p');
+            divider.className = 'ranking-divider';
+            divider.textContent = `--- ⬇️ Your Rank (อันดับที่ ${userRank}) ⬇️ ---`;
+            list.appendChild(divider);
+
+            // รายการอันดับของผู้ใช้
+            const userRankItem = createRankElement(userRankData, userRank, true);
+            list.appendChild(userRankItem);
+        }
+    }
 
     attachRankPreviewHandlers();
   }
+
 
   function attachRankPreviewHandlers() {
     const rankItems = document.querySelectorAll('#ranking-list .rank-item');
@@ -327,68 +527,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       el.onclick = () => { preview.style.display = 'none'; };
     });
   }
-
-  /* ===========================
-   * 5) Modal Flow (ซื้อ/ลอย/บริจาค)
-   * =========================== */
-  let pendingTier = null;
-  let pendingPrice = null;
-
-  function openWishModal(tier, price) {
-    pendingTier = tier;
-    pendingPrice = price;
-    if (wishInput) wishInput.value = '';
-    wishModal?.classList.remove('hidden');
-  }
-  function closeWishModal() {
-    wishModal?.classList.add('hidden');
-    pendingTier = null; pendingPrice = null;
-  }
-
-  buyButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const card = btn.closest('.krathong-card');
-      const tier  = Number(card?.dataset.level || 1);
-      const price = Number(card?.dataset.price || 0);
-      openWishModal(tier, price);
-    });
-  });
-
-  cancelWishBtn?.addEventListener('click', closeWishModal);
-
-  submitWishBtn?.addEventListener('click', async () => {
-    const wish = (wishInput?.value || 'ขอให้มีความสุข').trim();
-    const tier = pendingTier || 1;
-    const price = pendingPrice || 0;
-
-    // TODO: เชื่อมสัญญาจริงที่นี่ (write tx) แล้วค่อย success
-    spawnKrathong(tier, wish);
-    krathongCount += 1;
-    if (floatCountEl) floatCountEl.textContent = krathongCount.toLocaleString();
-
-    if (currentWalletAddress) addContribution(currentWalletAddress, price, tier, wish);
-    closeWishModal();
-  });
-
-  donateBtn?.addEventListener('click', () => {
-    const amountEl = document.getElementById('donation-amount');
-    const amount = Number(amountEl?.value || 0);
-    if (!amount || amount <= 0) return;
-
-    // TODO: เชื่อมสัญญาจริง (donate)
-    krathongCount += 1;
-    if (floatCountEl) floatCountEl.textContent = krathongCount.toLocaleString();
-
-    if (currentWalletAddress) addContribution(currentWalletAddress, amount, 1, 'ร่วมบุญ');
-    amountEl.value = '';
-  });
-
-  // แรนก์เริ่มต้น
+  
+  // NOTE: การเรียกใช้เริ่มต้นถูกย้ายมาไว้ที่นี่
   renderRankingList();
-
-  /* ===========================
-   * 6) หมายเหตุ: ตัด body click-unmute เดิมทิ้ง
-   *    (เราใช้ enableSound() ผูกกับปุ่มจริงแทน)
-   *    โค้ดนี้จงใจ "ไม่" ใส่ document.body.addEventListener('click', ...)
-   * =========================== */
 });

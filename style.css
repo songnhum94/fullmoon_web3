@@ -230,9 +230,10 @@ body{
   transition: opacity 0.2s;
 }
 
+/* style.css: ตรวจสอบ/เพิ่มโค้ดนี้ */
 .modal-overlay.hidden {
   opacity: 0;
-  pointer-events: none;
+  pointer-events: none; /* ทำให้คลิกทะลุได้เมื่อซ่อน */
 }
 
 .modal-content {
